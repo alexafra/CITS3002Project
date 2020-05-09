@@ -1,11 +1,11 @@
-public class Route {
+public class Connection {
     private Time departureTime;
     private Time arrivalTime;
     private String vehicleName; //Line one bus 12
     private String stopName; //platform b or stopA
     private boolean isBus;
 
-    public Route (Time departureTime, Time arrivalTime, String vehicleName, String stopName, boolean isBus) {
+    public Connection(Time departureTime, Time arrivalTime, String vehicleName, String stopName, boolean isBus) {
         this.departureTime = departureTime;
         this.arrivalTime = arrivalTime;
         this.vehicleName = vehicleName;
@@ -13,7 +13,7 @@ public class Route {
         this.isBus = false;
     }
 
-    public Route() {
+    public Connection() {
         this (new Time(), new Time(), "", "", false);
     }
 
@@ -31,12 +31,11 @@ public class Route {
 
     /**
      *
-     * @return a string representation of the Route object
+     * @return a string representation of the Connection object
      */
     public String toString() {
         String routeString = "";
-        routeString = routeString + departureTime.toString() + "," + vehicleName + "," + stopName;
-        routeString = routeString + arrivalTime.toString();
+        routeString = routeString + departureTime.toString() + "," + vehicleName + "," + stopName + "," + arrivalTime.toString();
         return routeString;
     }
 
@@ -46,24 +45,28 @@ public class Route {
      * @param routeString is the string representation of the route
      */
     public void fromString(String routeString) {
-        String[] splitRouteString = routeString.split("[,]");
+        String[] splitRouteString = routeString.split(",");
         this.departureTime.fromString(splitRouteString[0]);
         this.vehicleName = splitRouteString[1];
         this.stopName = splitRouteString[2];
         this.arrivalTime.fromString(splitRouteString[3]);
     }
 
+
     /**
      * Tests if two route objects are equal
-     * @param routeOther the other route object
+     * @param connectionOther the other route object
      * @return true if two objects are equal, false otherwise
      */
-    public boolean equals(Route routeOther) {
-        boolean sameDepartureTime = this.getDepartureTime() == routeOther.getDepartureTime();
-        boolean sameVehicleName = this.getVehicleName() == routeOther.getVehicleName();
-        boolean sameStopName = this.getStopName() == routeOther.getStopName();
-        boolean sameArrivalTime = this.getArrivalTime() == routeOther.getArrivalTime();
-        boolean sameIsBus = this.getIsBus() == routeOther.getIsBus(); //This shouldnt ever impact
+    public boolean equals(Connection connectionOther) {
+        if (connectionOther == null || connectionOther.getClass() != getClass())
+            return false;
+
+        boolean sameDepartureTime = this.getDepartureTime() == connectionOther.getDepartureTime();
+        boolean sameVehicleName = this.getVehicleName() == connectionOther.getVehicleName();
+        boolean sameStopName = this.getStopName() == connectionOther.getStopName();
+        boolean sameArrivalTime = this.getArrivalTime() == connectionOther.getArrivalTime();
+        boolean sameIsBus = this.getIsBus() == connectionOther.getIsBus(); //This shouldnt ever impact
 
         return sameDepartureTime && sameVehicleName && sameStopName && sameArrivalTime && sameIsBus;
     }

@@ -63,6 +63,9 @@ public class Time {
      * @return true if timeOther equals this object, false otherwise
      */
     public boolean equals(Time timeOther) {
+        if (timeOther == null || timeOther.getClass() != getClass())
+            return false;
+
         boolean sameHour = this.getHour() == timeOther.getHour();
         boolean sameMinute = this.getMinute() == timeOther.getMinute();
 
