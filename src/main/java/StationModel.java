@@ -1,7 +1,7 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 public class StationModel {
     private static MyFileContents fileContents;
@@ -26,18 +26,51 @@ public class StationModel {
 
 
     public int getMyPort() {
-        return fileContents.getMyPort();
+        return fileContents.getMyUdpPort();
     }
     public String getMyFileName() {
         return fileContents.getMyFileName();
     }
-    public String getMyName() {
-        return fileContents.getMyName();
+    public String getMyName() { return fileContents.getMyName(); }
+
+    private void getNeighbourPorts(String neighbours) {
+//        Set<String> neighbourNames = neighbours.keySet();
+//        for (String neighbourName : neighbourNames) {
+//            if (neighbourNamePorts.get(neighbourName) == null) {
+//                //In the mode
+////                try {
+////                    String requestString = "GET /#name ALEX/1.0";
+////                    byte[] requestBytes = requestString.getBytes(StandardCharsets.UTF_8);
+////                    InetSocketAddress destination = new InetSocketAddress("127.0.0.1", myUdpPort);
+////                    DatagramPacket requestPacket = new DatagramPacket(requestBytes, requestBytes.length, destination);
+////
+////                    DatagramSocket datagramSocket = new DatagramSocket(myUdpPort); //HOW WILL THIS INTERFERE WITH MAIN SERVER SECTION!!!!!!!!!!
+////                    datagramSocket.send(requestPacket);
+////
+////                } catch (Exception e) {
+////                    System.out.println("Err: " + e);
+////                    System.exit(1);
+////                }
+//            }
+//        }
     }
+
     public HashMap<String, StationNeighbour> getNeighbours() {
+        List neighboursWithoutPorts = fileContents.getNeighboursWithoutPorts();
+        /*
+        Need to call other ports to get their neighbours
+        Need to Send UDP request to other Servers
+         */
+
+
+
         return fileContents.getNeighbours();
     }
 
+
+    public void setNamePort(String name, int port) {
+        fileContents.updateNeighbourNamePort(name, port);
+    }
     public ArrayList<Connection> getConnections(String destination) {
         HashMap<String, StationNeighbour> neighbours = fileContents.getNeighbours();
 
@@ -52,7 +85,7 @@ public class StationModel {
         } else {
             //This is the big boys work
 //            String myName = model.getMyName();
-//            int myPort = model.getMyPort();
+//            int myPort = model.getMyTcpPort();
 //            model.getConnectionsTo(value);
 //            //
         }

@@ -19,7 +19,7 @@ public class StationModelTest {
 
     public static void setMyFile(String myFile) { StationModel.myFile = myFile; }
 
-    public static void setMyPort(int myPort) { StationModel.myPort = myPort; }
+    public static void setMyTcpPort(int myPort) { StationModel.myPort = myPort; }
      */
     @BeforeEach
     public void init () {

@@ -51,4 +51,26 @@ public class StationController {
 
     }
 
+    public void postName(String body) {
+        String[] bodyLines = body.split("\n", 2);
+        String[] variables = bodyLines[0].split(",");
+        String[] values = bodyLines[1].split(",");
+        if (variables[0].equals("myName") && variables[1].equals("myPort")) {
+            String name = values[0];
+            int port = Integer.parseInt(values[1]);
+            model.setNamePort(name, port);
+        }
+    }
+
+    /**
+     * getName method is called on base for the UDP protocol
+     * should return the Station name
+     *
+     */
+    public void getName() {
+        String myName = model.getMyName();
+        int myPort = model.getMyPort();
+        view.displayNameUdp(myName, myPort);
+    }
+
 }

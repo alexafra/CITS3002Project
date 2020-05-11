@@ -3,6 +3,9 @@ import java.io.FileReader;
 import java.util.Date;
 import java.util.HashMap;
 import java.io.File;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyFileContents {
     //Key to file
@@ -12,22 +15,47 @@ public class MyFileContents {
 
     //Persistent info
     private String stationName;
-    private int myPort;
-    private HashMap<String, Integer> neighbourNamePort;
+    private int myTcpPort;
+    private int myUdpPort;
+    private HashMap<String, Integer> neighbourNamePorts;
 
     //Info that may change
     private HashMap<String, StationNeighbour> neighbours;
 
 
-    public MyFileContents(String myFileName, String stationName, int myPort) {
+    public MyFileContents(String myFileName, String stationName, int myTcpPort, int myUdpPort) {
         this.stationName = stationName;
         this.myFileName = myFileName;
-        this.myPort = myPort;
+        this.myTcpPort = myTcpPort;
+        this.myUdpPort = myUdpPort;
         this.lastRead = 0;
         this.myFile = new File(myFileName);
         this.neighbours = new HashMap<>();
-        this.neighbourNamePort = new HashMap<>();
+        this.neighbourNamePorts = new HashMap<>();
     }
+    public void updateNeighbourNamePort (String name, int port) {
+        if (neighbours.get(name) == null) {
+            System.out.println("Not my neighbour");
+            return;
+        } //Do nothing if its not your neighbour
+        neighbourNamePorts.put(name, port);
+        StationNeighbour neighbour = neighbours.get(name);
+        for (Connection connection : neighbour.getConnections()) {
+            connection.setArrivalPort(port);
+        }
+        neighbour.setPort(port);
+    }
+
+    public List<String> getNeighboursWithoutPorts() {
+        List<String >neighboursWithoutPorts = new ArrayList<>();
+        for (String neighbour : neighbours.keySet()) {
+            if (neighbourNamePorts.get(neighbour) == null) {
+                neighboursWithoutPorts.add(neighbour);
+            }
+        }
+        return neighboursWithoutPorts;
+    }
+
 
     public void updateFileContents() {
         long lastModified = myFile.lastModified();
@@ -40,7 +68,7 @@ public class MyFileContents {
     }
 
     public void addNeighbourNamePort(String name, int port) {
-        neighbourNamePort.put(name, port);
+        neighbourNamePorts.put(name, port);
         neighbours.get(name).setPort(port);
     }
 
@@ -62,15 +90,15 @@ public class MyFileContents {
 
                 Connection newConnection = new Connection();
                 newConnection.setDepartureLocation(stationName);
-                newConnection.setDeparturePort(myPort);
+                newConnection.setDeparturePort(myUdpPort);
                 newConnection.populateFromString(nextLine);
 
                 if (!neighbours.containsKey(neighbourName)) { //A)neighbour does not exist
                     StationNeighbour neighbour = new StationNeighbour(neighbourName, 0);
                     newConnection.setArrivalPort(0);
-                    if (neighbourNamePort.get(neighbourName) != null) {
-                        neighbour.setPort(neighbourNamePort.get(neighbourName));
-                        newConnection.setArrivalPort(neighbourNamePort.get(neighbourName));
+                    if (neighbourNamePorts.get(neighbourName) != null) {
+                        neighbour.setPort(neighbourNamePorts.get(neighbourName));
+                        newConnection.setArrivalPort(neighbourNamePorts.get(neighbourName));
                     }
                     neighbour.addConnection(newConnection);
 
@@ -89,9 +117,12 @@ public class MyFileContents {
 
     public void setMyName(String myName) { myName = myName; }
     public void setMyFile(String myFile) { myFile = myFile; }
-    public void setMyPort(int myPort) { myPort = myPort; }
+    public void setMyTcpPort(int myTcpPort) { myTcpPort = myTcpPort; }
 
-    public int getMyPort() { return myPort; }
+    public int getMyTcpPort() { return myTcpPort; }
+
+    public int getMyUdpPort() { return myUdpPort; }
+
     public File getMyFile() { return myFile; }
     public String getMyFileName() { return myFileName; }
     public String getMyName() { return stationName; }

@@ -89,6 +89,13 @@ public class StationView {
         return body;
     }
 
+    public void displayNameUdp(String myName, int myPort) {
+        String header = "POST /#name ALEX/1.0\n";
+        String body = "myName,myPort\n" + myName + "," + myPort;
+        String response = header + "\n" + body;
+        stationView = response;
+    }
+
 
     public void badRequestResponse() { stationView = badHeader(); }
 
