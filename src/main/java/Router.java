@@ -4,6 +4,12 @@
  * Then returns the view response which is a string
  */
 public class Router {
+    StationController controller;
+
+    public Router(StationController controller) {
+        this.controller = controller;
+    }
+
 
     public String route(String httpRequestLine, String body) {
         String[] urlSummary = this.parseRequestLine(httpRequestLine);
@@ -16,9 +22,7 @@ public class Router {
 
         if (location.equals("/")) { //Station controller
 
-            StationModel model = new StationModel();
-            StationView view = new StationView();
-            StationController controller = new StationController(model, view);
+
             String key = urlSummary[2];
             String value = urlSummary[3];
             String fragment = urlSummary[4];

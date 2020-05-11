@@ -1,17 +1,31 @@
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.Selector;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class StationModel {
     private static MyFileContents fileContents;
+    private static final int DATAGRAM_BYTE_SIZE = 128;
+    private DatagramChannel datagramChannel;
+    private Selector selector;
 
     private String myName;
     private String myFile;
     private int myPort;
     private HashMap<String, StationNeighbour> myNeighbours;
 
-    public StationModel() {
+    public StationModel(DatagramChannel datagramChannel, Selector selector) {
+        this.datagramChannel = datagramChannel;
+        this.selector = selector;
         fileContents.updateFileContents();
+    }
+
+    public StationModel() {
+        this(null, null);
     }
 
 
@@ -27,35 +41,30 @@ public class StationModel {
     public int getMyUdpPort() {
         return fileContents.getMyUdpPort();
     }
+
     public String getMyFileName() {
         return fileContents.getMyFileName();
     }
+
     public String getMyName() { return fileContents.getMyName(); }
 
     private void getMissingNeighbourPorts() {
-        List portsWithoutNames = fileContents.getPortsWithoutNames();
+        List<Integer> portsWithoutNames = fileContents.getPortsWithoutNames();
 
-        //Send request for names to other ports
-//
-//        Set<String> neighbourNames = neighbours.keySet();
-//        for (String neighbourName : neighbourNames) {
-//            if (neighbourNamePorts.get(neighbourName) == null) {
-//                //In the mode
-////                try {
-////                    String requestString = "GET /#name ALEX/1.0";
-////                    byte[] requestBytes = requestString.getBytes(StandardCharsets.UTF_8);
-////                    InetSocketAddress destination = new InetSocketAddress("127.0.0.1", myUdpPort);
-////                    DatagramPacket requestPacket = new DatagramPacket(requestBytes, requestBytes.length, destination);
-////
-////                    DatagramSocket datagramSocket = new DatagramSocket(myUdpPort); //HOW WILL THIS INTERFERE WITH MAIN SERVER SECTION!!!!!!!!!!
-////                    datagramSocket.send(requestPacket);
-////
-////                } catch (Exception e) {
-////                    System.out.println("Err: " + e);
-////                    System.exit(1);
-////                }
-//            }
-//        }
+        try {
+            for (Integer portWithoutName : portsWithoutNames) {
+                String requestString = UdpPacketConstructor.getPortName();
+                ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
+                InetSocketAddress destination = new InetSocketAddress("127.0.0.1", portWithoutName);
+                datagramChannel.send(requestBytes, destination);
+
+
+            }
+        } catch (Exception e) {
+            System.out.println("Err: " + e);
+            System.exit(1);
+        }//DONT RESPOND IF NOT finished
+
     }
 
     public HashMap<String, StationNeighbour> getNeighbours() {
@@ -66,15 +75,12 @@ public class StationModel {
          */
 
 
-
         return fileContents.getNeighbours();
     }
 
 
-    public void setNamePort(String name, int port) {
-        fileContents.updateNeighbourNamePort(name, port);
-    }
     public ArrayList<Connection> getConnections(String destination) {
+        getMissingNeighbourPorts();
         HashMap<String, StationNeighbour> neighbours = fileContents.getNeighbours();
 
         ArrayList<Connection> connections = new ArrayList<>();
@@ -94,6 +100,10 @@ public class StationModel {
         }
         return connections;
 
+    }
+
+    public void setNamePort(String name, int port) {
+        fileContents.updateNeighbourNamePort(name, port);
     }
 
 }

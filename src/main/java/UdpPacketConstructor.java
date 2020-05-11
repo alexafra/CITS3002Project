@@ -7,7 +7,7 @@ public class UdpPacketConstructor {
         return response;
     }
 
-    public static String getPortName(String myName, int myPort) {
+    public static String getPortName() {
         return "GET /#name ALEX/1.0";
     }
 }

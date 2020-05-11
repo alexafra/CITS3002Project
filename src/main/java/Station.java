@@ -1,16 +1,13 @@
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.io.PrintWriter;
-import java.io.InputStreamReader;
-import java.util.Set;
 import java.util.Iterator;
-import java.nio.ByteBuffer;
+import java.util.Set;
 
 
 /*
@@ -66,6 +63,13 @@ public class Station {
                 while (iterator.hasNext()) {
                     key = iterator.next();//Combines channel with key of selector and keyType
                     iterator.remove();
+
+                    //Each model may only need to send stuff
+                    //Give the model access to the datagramChannel
+                    StationModel model = new StationModel(datagramChannel, selector);
+                    StationView view = new StationView();
+                    StationController controller = new StationController(model, view);
+
                     if (key.isAcceptable()) {
                         SocketChannel socketChannel = serverSocketChannel.accept();
                         socketChannel.configureBlocking(false);
@@ -93,7 +97,7 @@ public class Station {
                             inputBuf.clear(); //Clear ByteBuffer
 
 
-                            Router router = new Router();
+                            Router router = new Router(controller);
                             String[] httpRequestSplit = httpRequest.split("\n", 2);
                             String httpRequestFirstLine = httpRequestSplit[0];
 
@@ -131,7 +135,7 @@ public class Station {
 
 
                             //Route the datagram to correct response depending based on datagrams first line
-                            Router router = new Router();
+                            Router router = new Router(controller);
                             String datagramResponse = router.route(datagramRequestHeader, datagramRequestBody);
                             if (datagramResponse.length() > 0) { //If there is a response send it.
                                 byte[] outBytes = datagramResponse.getBytes(StandardCharsets.UTF_8);
