@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 public class StationModel {
     private static MyFileContents fileContents;
@@ -37,7 +36,7 @@ public class StationModel {
         List portsWithoutNames = fileContents.getPortsWithoutNames();
 
         //Send request for names to other ports
-
+//
 //        Set<String> neighbourNames = neighbours.keySet();
 //        for (String neighbourName : neighbourNames) {
 //            if (neighbourNamePorts.get(neighbourName) == null) {
