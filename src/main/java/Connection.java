@@ -7,9 +7,8 @@ public class Connection {
     private Time arrivalTime;
     private String vehicleName; //Line one bus 12
     private String stopName; //platform b or stopA
-    private boolean isBus;
 
-    public Connection(String departureLocation, String arrivalLocation, int departurePort, int arrivalPort, Time departureTime, Time arrivalTime, String vehicleName, String stopName, boolean isBus) {
+    public Connection(String departureLocation, String arrivalLocation, int departurePort, int arrivalPort, Time departureTime, Time arrivalTime, String vehicleName, String stopName) {
         this.departureLocation = departureLocation;
         this.arrivalLocation = arrivalLocation;
         this.departurePort = departurePort;
@@ -18,11 +17,10 @@ public class Connection {
         this.arrivalTime = arrivalTime;
         this.vehicleName = vehicleName;
         this.stopName = stopName;
-        this.isBus = false;
     }
 
     public Connection() {
-        this ("", "", 0, 0, new Time(), new Time(), "", "", false);
+        this ("", "", 0, 0, new Time(), new Time(), "", "");
     }
 
     public String getDepartureLocation() { return departureLocation; }
@@ -34,7 +32,6 @@ public class Connection {
     public Time getArrivalTime() { return arrivalTime; }
     public String getVehicleName() { return vehicleName; }
     public String getStopName() { return stopName; }
-    public boolean isBus() { return isBus; }
 
     public void setDepartureLocation(String departureLocation) { this.departureLocation = departureLocation; }
     public void setArrivalLocation(String arrivalLocation) { this.arrivalLocation = arrivalLocation; }
@@ -44,8 +41,6 @@ public class Connection {
     public void setArrivalTime(Time arrivalTime) { this.arrivalTime = arrivalTime; }
     public void setVehicleName(String vehicleName) { this.vehicleName = vehicleName; }
     public void setStopName(String stopName) { this.stopName = stopName; }
-    public void setIsBus(boolean bus) { isBus = bus; }
-    public void setBus(boolean bus) { isBus = bus; }
 
     /**
      *
@@ -90,9 +85,8 @@ public class Connection {
         boolean sameVehicleName = this.getVehicleName() == connectionOther.getVehicleName();
         boolean sameStopName = this.getStopName() == connectionOther.getStopName();
         boolean sameArrivalTime = this.getArrivalTime() == connectionOther.getArrivalTime();
-        boolean sameIsBus = this.isBus() == connectionOther.isBus(); //This shouldnt ever impact
 
         return sameDepartureLocation && sameArrivalLocation && sameDeparturePort && sameArrivalPort &&sameDepartureTime
-                && sameVehicleName && sameStopName && sameArrivalTime && sameIsBus;
+                && sameVehicleName && sameStopName && sameArrivalTime;
     }
 }

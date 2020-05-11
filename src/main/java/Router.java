@@ -12,6 +12,7 @@ public class Router {
 
         //IS it a request or response
 
+        String response = "";
 
         if (location.equals("/")) { //Station controller
 
@@ -24,22 +25,22 @@ public class Router {
 
             if (method.equals("GET")) { //Get method - TCP
                 if (key != "" && key != null && value != "" && value != null) { //single key-value
-                    controller.get(key, value);
+                    response = controller.get(key, value);
 
-                } else if (fragment != null && fragment != "") {
-                    controller.getName();
+                } else if (fragment.equals("name")) { //UDP Name Request
+                    response = controller.getName();
 
-                } else { //no key-value
-                    controller.get();
+                } else { //no key-valuev //General GET method - TCP
+                    response = controller.get();
                 }
-            } else if (method.equals("POST")) {
+            } else if (method.equals("POST")) { //Udp Name Post
                 if (fragment.equals("name")) {
-                    controller.postName(body);
+                    controller.postName(body); //No response ... Maybe an ACK?
                 }
 
             }
 
-            return view.getStationView();
+            return response;
         }
         return ""; //Could not map url to a controller method - should do nothing
     }

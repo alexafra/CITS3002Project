@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.net.*;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.PrintWriter;
 import java.io.InputStreamReader;
@@ -131,9 +132,9 @@ public class Station {
 
                             //Route the datagram to correct response depending based on datagrams first line
                             Router router = new Router();
-                            String viewString = router.route(datagramRequestHeader, datagramRequestBody);
-                            if (viewString.length() > 0) { //If there is a response send it.
-                                byte[] outBytes = viewString.getBytes(StandardCharsets.UTF_8);
+                            String datagramResponse = router.route(datagramRequestHeader, datagramRequestBody);
+                            if (datagramResponse.length() > 0) { //If there is a response send it.
+                                byte[] outBytes = datagramResponse.getBytes(StandardCharsets.UTF_8);
                                 //Set datagramPacket data response
                                 inputDatagramPacket.setData(outBytes);
                                 //Set datagramPacket response address
@@ -203,8 +204,17 @@ public class Station {
         int myTcpPort = Integer.parseInt(args[1]);
         int myUdpPort = Integer.parseInt(args[2]);
 
+        ArrayList<Integer> neighbourPorts = new ArrayList<>();
+        for (int i = 3; i < args.length; i ++) {
+            if (args[i].matches("\\d+")) {
+                neighbourPorts.add(Integer.parseInt(args[i]));
+            } else {
+                break; //probably hit &
+            }
+        }
+
         //Until we get a better idea of where these go
-        MyFileContents fileContents = new MyFileContents(fileLocation + "tt-" + serverName, serverName, myTcpPort, myUdpPort);
+        MyFileContents fileContents = new MyFileContents(fileLocation + "tt-" + serverName, serverName, myTcpPort, myUdpPort, neighbourPorts);
         StationModel.setFileContents(fileContents);
 
         Station myStation = new Station(serverName, myTcpPort, myUdpPort);

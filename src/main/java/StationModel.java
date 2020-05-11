@@ -25,7 +25,7 @@ public class StationModel {
     public static void setFileContents(MyFileContents fileContents) { StationModel.fileContents = fileContents; }
 
 
-    public int getMyPort() {
+    public int getMyUdpPort() {
         return fileContents.getMyUdpPort();
     }
     public String getMyFileName() {
@@ -33,7 +33,11 @@ public class StationModel {
     }
     public String getMyName() { return fileContents.getMyName(); }
 
-    private void getNeighbourPorts(String neighbours) {
+    private void getMissingNeighbourPorts() {
+        List portsWithoutNames = fileContents.getPortsWithoutNames();
+
+        //Send request for names to other ports
+
 //        Set<String> neighbourNames = neighbours.keySet();
 //        for (String neighbourName : neighbourNames) {
 //            if (neighbourNamePorts.get(neighbourName) == null) {
@@ -56,7 +60,7 @@ public class StationModel {
     }
 
     public HashMap<String, StationNeighbour> getNeighbours() {
-        List neighboursWithoutPorts = fileContents.getNeighboursWithoutPorts();
+        getMissingNeighbourPorts();
         /*
         Need to call other ports to get their neighbours
         Need to Send UDP request to other Servers

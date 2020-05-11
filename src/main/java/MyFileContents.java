@@ -17,13 +17,14 @@ public class MyFileContents {
     private String stationName;
     private int myTcpPort;
     private int myUdpPort;
+    private ArrayList<Integer> neighbourPorts;
     private HashMap<String, Integer> neighbourNamePorts;
 
     //Info that may change
     private HashMap<String, StationNeighbour> neighbours;
 
 
-    public MyFileContents(String myFileName, String stationName, int myTcpPort, int myUdpPort) {
+    public MyFileContents(String myFileName, String stationName, int myTcpPort, int myUdpPort, ArrayList<Integer> neighbourPorts) {
         this.stationName = stationName;
         this.myFileName = myFileName;
         this.myTcpPort = myTcpPort;
@@ -32,6 +33,7 @@ public class MyFileContents {
         this.myFile = new File(myFileName);
         this.neighbours = new HashMap<>();
         this.neighbourNamePorts = new HashMap<>();
+        this.neighbourPorts = neighbourPorts;
     }
     public void updateNeighbourNamePort (String name, int port) {
         if (neighbours.get(name) == null) {
@@ -46,8 +48,8 @@ public class MyFileContents {
         neighbour.setPort(port);
     }
 
-    public List<String> getNeighboursWithoutPorts() {
-        List<String >neighboursWithoutPorts = new ArrayList<>();
+    public List<String> getNamesWithoutPorts() {
+        List<String>neighboursWithoutPorts = new ArrayList<>();
         for (String neighbour : neighbours.keySet()) {
             if (neighbourNamePorts.get(neighbour) == null) {
                 neighboursWithoutPorts.add(neighbour);
@@ -55,6 +57,19 @@ public class MyFileContents {
         }
         return neighboursWithoutPorts;
     }
+
+    public List<Integer> getPortsWithoutNames() {
+
+
+        List<Integer> portsWithoutNames = new ArrayList<>();
+        for (Integer port : neighbourPorts) {
+            if (!neighbourNamePorts.values().contains(port)) {
+                portsWithoutNames.add(port);
+            }
+        }
+        return portsWithoutNames;
+    }
+
 
 
     public void updateFileContents() {

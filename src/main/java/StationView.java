@@ -55,7 +55,13 @@ public class StationView {
         String connectionsString = "";
         for (int i = 0; i < connections.size(); i ++) {
             Connection connection = connections.get(i);
-            connectionsString = "Take bus " + connection.getVehicleName() + " From " + connection.getStopName();
+            String vehicleType;
+            if (connection.getVehicleName().matches("\\d+")) {
+                vehicleType = "bus";
+            } else {
+                vehicleType = "train";
+            }
+            connectionsString = "Take the " + vehicleType + connection.getVehicleName() + " From " + connection.getStopName();
             connectionsString = connectionsString + " At " + myName + " to " + neighbour + " Departure Time: ";
             connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: ";
             connectionsString = connectionsString + connection.getArrivalTime() + "\n";
@@ -89,14 +95,6 @@ public class StationView {
         return body;
     }
 
-    public void displayNameUdp(String myName, int myPort) {
-        String header = "POST /#name ALEX/1.0\n";
-        String body = "myName,myPort\n" + myName + "," + myPort;
-        String response = header + "\n" + body;
-        stationView = response;
-    }
-
-
     public void badRequestResponse() { stationView = badHeader(); }
 
     public String badHeader() {
@@ -114,11 +112,6 @@ public class StationView {
         header = header + "Connection: Closed\n";
         return header;
     }
-
-
-
-
-
 
 
 }

@@ -16,14 +16,16 @@ public class StationController {
      * get method is called on base with no key-value pairs
      * should return all timetable information associated with station
      */
-    public void get () {
+    public String get () {
         String myName = model.getMyName(); //model should update
-        int myPort = model.getMyPort();
+        int myPort = model.getMyUdpPort();
         String myFileName = model.getMyFileName();
         HashMap<String, StationNeighbour> neighboursMap = model.getNeighbours();
         ArrayList<StationNeighbour> neighbours = new ArrayList<> (neighboursMap.values());
 
         view.displayWholeStation(myName, myPort, myFileName, neighbours);
+
+        return view.getStationView();
     }
 
     /**
@@ -32,14 +34,14 @@ public class StationController {
      *
      * For the complicated case we need to "ring" each station to get their name
      */
-    public void get(String key, String destination) {
+    public String get(String key, String destination) {
         if (!key.equals("to")) {
             view.badRequestResponse();
         }
 
 
         String myName = model.getMyName();
-        int myPort = model.getMyPort();
+        int myPort = model.getMyUdpPort();
         ArrayList<Connection> connections = model.getConnections(destination);
         if (connections.isEmpty()) {
             view.displayNoConnectionAvailable(myName, myPort, destination);
@@ -48,6 +50,7 @@ public class StationController {
             view.displayConnections(myName, myPort, destination, destinationPort, connections);
         }
 
+        return view.getStationView();
 
     }
 
@@ -67,10 +70,12 @@ public class StationController {
      * should return the Station name
      *
      */
-    public void getName() {
+    public String getName() {
         String myName = model.getMyName();
-        int myPort = model.getMyPort();
-        view.displayNameUdp(myName, myPort);
+        int myUdpPort = model.getMyUdpPort();
+
+        String udpResponse = UdpPacketConstructor.sendPortName(myName, myUdpPort);
+        return udpResponse;
     }
 
 }
