@@ -30,7 +30,7 @@ public class Router {
 
             return view.getStationView();
         }
-        return null; //Could not map url to a controller method - should do nothing
+        return ""; //Could not map url to a controller method - should do nothing
     }
 
 

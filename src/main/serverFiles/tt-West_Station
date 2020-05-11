@@ -1,4 +1,3 @@
 West_Station,-31.8448,115.7963
-12:12,12,Stop1,14:14,East_Station
-12:12,12,Stop1,14:14,North_Terminus
-12:12,12,Stop1,14:14,South_Busport
+05:15,Line1,PlatformB,06:10,East_Station
+05:22,180,StopA,05:51,South_Busport

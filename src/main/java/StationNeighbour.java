@@ -13,8 +13,8 @@ public class StationNeighbour {
         this.connections = connections;
     }
 
-    public StationNeighbour(String name) {
-        this(name, 0, new ArrayList<>());
+    public StationNeighbour(String name, int port) {
+        this(name, port, new ArrayList<>());
     }
 
     public StationNeighbour() {
@@ -29,14 +29,14 @@ public class StationNeighbour {
     public void setPort(int port) { this.port = port; }
     public void setConnections(ArrayList<Connection> connections) { this.connections = connections; }
 
-    public void addRoute(Connection connection) { this.connections.add(connection); }
-    public void removeRoute(Connection connection) { this.connections.remove(connection); }
+    public void addConnection(Connection connection) { this.connections.add(connection); }
+    public void removeConnection(Connection connection) { this.connections.remove(connection); }
 
     public void fromString(String serverString) { //String is 1 route and a server name
         String[] splitServerString = serverString.split(",");
         this.name = splitServerString[4];
         Connection newConnection = new Connection();
-        newConnection.fromString(serverString);
+        newConnection.populateFromString(serverString);
         connections.add(newConnection);
     }
 

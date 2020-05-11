@@ -1,4 +1,3 @@
 South_Busport,-29.8448,117.7963
-12:12,12,Stop1,14:14,North_Terminus
-12:12,12,Stop1,14:14,West_Station
-12:12,12,Stop1,14:14,East_Station
+05:15,180,StopB,06:10,West_Station
+11:30,180,StopA,12:10,East_Station

@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.ArrayList;
 
 //What to do if url hits base path "/"
 //Contains java methods that are called if
@@ -16,8 +17,13 @@ public class StationController {
      * should return all timetable information associated with station
      */
     public void get () {
-        model.readMyFile(); //model should update
-        view.displayWholeStation(model);
+        String myName = model.getMyName(); //model should update
+        int myPort = model.getMyPort();
+        String myFileName = model.getMyFileName();
+        HashMap<String, StationNeighbour> neighboursMap = model.getNeighbours();
+        ArrayList<StationNeighbour> neighbours = new ArrayList<> (neighboursMap.values());
+
+        view.displayWholeStation(myName, myPort, myFileName, neighbours);
     }
 
     /**
@@ -26,20 +32,23 @@ public class StationController {
      *
      * For the complicated case we need to "ring" each station to get their name
      */
-    public void get(String key, String value) {
+    public void get(String key, String destination) {
         if (!key.equals("to")) {
             view.badRequestResponse();
         }
-        model.readMyFile(); //model should update
-        HashMap<String, StationNeighbour> neighbours = model.getNeighbours();
-        if (neighbours.containsKey(value)) {
-            String myName = model.getMyName();
-            String neighbourName = value;
-            StationNeighbour neighbour = neighbours.get(value);
-            Connection soonestConnection = neighbour.getConnections().get(0);////!!!!!!!!!!!!!!!!!!WIll have to change
 
-            view.displayStationNeighbour(myName, neighbourName, soonestConnection);
+
+        String myName = model.getMyName();
+        int myPort = model.getMyPort();
+        ArrayList<Connection> connections = model.getConnections(destination);
+        if (connections.isEmpty()) {
+            view.displayNoConnectionAvailable(myName, myPort, destination);
+        } else {
+            int destinationPort = connections.get(connections.size() - 1).getArrivalPort();
+            view.displayConnections(myName, myPort, destination, destinationPort, connections);
         }
+
+
     }
 
 }

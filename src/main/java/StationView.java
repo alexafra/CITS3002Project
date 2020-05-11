@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.Set;
+import java.util.ArrayList;
 
 public class StationView {
 
@@ -11,55 +12,83 @@ public class StationView {
 
     public String getStationView() { return stationView; }
 
-    public void displayWholeStation(StationModel model) {
+    public void displayWholeStation(String myName, int myPort, String myFileName, ArrayList<StationNeighbour> neighbours) {
         String response = "";
         String responseHeader = goodHeader();
-        String responseBody = bodyDisplayWholeStation(model);
+        String responseBody = bodyDisplayWholeStation(myName, myPort, myFileName, neighbours);
         response = response + responseHeader + "\n" + responseBody;
         stationView = response;
     }
 
-    public String bodyDisplayWholeStation(StationModel model) {
-        String myNeighbours = "";
-        HashMap<String, StationNeighbour> neighbours = model.getNeighbours();
-        for(String neighbour : neighbours.keySet()) {
-            myNeighbours = myNeighbours + neighbour + "\t";
+    public String bodyDisplayWholeStation(String myName, int myPort, String myFileName, ArrayList<StationNeighbour> neighbours) {
+        String neighbourNames = "";
+        String neighbourPorts = "";
+
+        for (StationNeighbour neighbour : neighbours) {
+            neighbourNames = neighbourNames + neighbour.getName() + "\t";
+            neighbourPorts = neighbourPorts + neighbour.getPort() + "\t";
         }
         String body = "";
         body = body + "<html>\n";
         body = body + "<body>\n";
-        body = body + "<h1>My Name is: " + StationModel.getMyName() + "</h1>\n";
-        body = body + "<h1>My Port is: " + StationModel.getMyPort() + "</h1>\n";
-        body = body + "<h1>The file I'm reading from is: " + StationModel.getMyFile() + "</h1>\n";
-        body = body + "<h1>My neighbours are: " + myNeighbours + "</h1>\n";
+        body = body + "<h1>My Name is: " + myName + "</h1>\n";
+        body = body + "<h1>My Port is: " + myFileName + "</h1>\n";
+        body = body + "<p>The file I'm reading from is: " + myFileName + "</p>\n";
+        body = body + "<p>My neighbours are: " + neighbourNames + "</p>\n";
+        body = body + "<p>My neighbour Ports are: " + neighbourPorts + "</p>\n";
         body = body + "</body>\n";
         body = body + "</html>\n";
         return body;
     }
 
-    public void displayStationNeighbour(String myName, String neighbour, Connection connection) {
+    public void displayConnections(String myName, int myPort, String neighbour, int portDestination, ArrayList<Connection> connections) {
         String response = "";
         String responseHeader = goodHeader();
-        String responseBody = bodyDisplayStationNeighbour(myName, neighbour, connection);
+        String responseBody = bodyDisplayConnections(myName, myPort, neighbour, portDestination, connections);
         response = response + responseHeader + "\n" + responseBody;
         stationView = response;
     }
 
-    public String bodyDisplayStationNeighbour(String myName, String neighbour, Connection connection) {
-        String connectionString = "Take bus " + connection.getVehicleName() + " From " + connection.getStopName();
-        connectionString = connectionString + " At " + myName + " Departure Time: " ;
-        connectionString = connectionString + connection.getDepartureTime() + " Arrival Time: " + connection.getArrivalTime();
 
+    public String bodyDisplayConnections(String myName, int myPort, String neighbour, int portDestination, ArrayList<Connection> connections) {
+        String header = "The suggested route from your location: " + myName + " port: " + myPort + " to your destination: " + neighbour + " port: " + portDestination + " is:";
+        String connectionsString = "";
+        for (int i = 0; i < connections.size(); i ++) {
+            Connection connection = connections.get(i);
+            connectionsString = "Take bus " + connection.getVehicleName() + " From " + connection.getStopName();
+            connectionsString = connectionsString + " At " + myName + " to " + neighbour + " Departure Time: ";
+            connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: ";
+            connectionsString = connectionsString + connection.getArrivalTime() + "\n";
+        }
 
         String body = "";
         body = body + "<html>\n";
         body = body + "<body>\n";
-        body = body + "<h1>The suggested route from your location: " + myName + " to your destination: " + neighbour + " is:</h1>\n";
-        body = body + "<h1>" + connectionString +"</h1>\n";
+        body = body + "<h1>" + header + "</h1>\n";
+        body = body + "<p>" + connectionsString +"</p>\n";
         body = body + "</body>\n";
         body = body + "</html>\n";
         return body;
     }
+
+    public void displayNoConnectionAvailable(String myName, int myPort, String neighbour) {
+        String response = "";
+        String responseHeader = goodHeader();
+        String responseBody = bodyDisplayNoConnectionAvailable(myName, myPort, neighbour);
+        response = response + responseHeader + "\n" + responseBody;
+        stationView = response;
+    }
+
+    public String bodyDisplayNoConnectionAvailable(String myName, int myPort, String neighbour) {
+        String body = "";
+        body = body + "<html>\n";
+        body = body + "<body>\n";
+        body = body + "<h1>There is no known route from: " + myName + " port: " + myPort + " to your destination: " + neighbour + "</h1>\n";
+        body = body + "</body>\n";
+        body = body + "</html>\n";
+        return body;
+    }
+
 
     public void badRequestResponse() { stationView = badHeader(); }
 
