@@ -48,6 +48,35 @@ public class StationModel {
 
     public String getMyName() { return fileContents.getMyName(); }
 
+
+    public String[] parseUdpResponse(ByteBuffer response) {
+        String responseString = new String(response.array());
+
+
+        String[] headerAndBody = responseString.split("\n", 2);
+        String header = headerAndBody[0];
+        String body = headerAndBody[1].trim();
+
+        String[] parseFirstLine = header.split(" ");
+
+
+        String method = parseFirstLine[0];
+        String urlString = parseFirstLine[1];
+
+        String fragment = "";
+        String urlLocation = "";
+        String[] urlParser = urlString.split("#");
+        if (urlParser.length == 2) {
+            urlLocation = urlParser[0];
+            fragment = urlParser[1];
+        }
+
+        String[] requestLineInfo = {method, urlLocation, fragment, body};
+
+
+        return requestLineInfo;
+    }
+
     private void getMissingNeighbourPorts() {
         List<Integer> portsWithoutNames = fileContents.getPortsWithoutNames();
 
@@ -56,7 +85,30 @@ public class StationModel {
                 String requestString = UdpPacketConstructor.getPortName();
                 ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
                 InetSocketAddress destination = new InetSocketAddress("127.0.0.1", portWithoutName);
-                datagramChannel.send(requestBytes, destination);
+                datagramChannel.send(requestBytes, destination); //Not asking the Selector key
+
+                ByteBuffer responseBytes = ByteBuffer.allocate(DATAGRAM_BYTE_SIZE);
+                datagramChannel.receive(responseBytes);
+
+                String[] responseInfo = parseUdpResponse(responseBytes);
+                if (responseInfo[0].equals("POST") && responseInfo[1].equals("/") && responseInfo[2].equals("name")) {
+                    String[] bodyLines = responseInfo[3].split("\n", 2);
+                    String[] variables = bodyLines[0].split(",");
+                    String[] values = bodyLines[1].split(",");
+                    if (variables[0].equals("myName") && variables[1].equals("myPort")) {
+                        String name = values[0];
+                        int port = Integer.parseInt(values[1]);
+                        setNamePort(name, port);
+                    }
+
+                } else {
+                    System.out.println("SOMETHING WRONG!!!!!!!!");
+                }
+
+
+//                datagramChannel.re
+
+                //It needs to wait for a response and read the response
 
 
             }

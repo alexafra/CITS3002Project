@@ -21,12 +21,14 @@ public class Station {
     private String myName;
     private int myTcpPort;
     private int myUdpPort;
+    private int myPacketNumber;
     private ServerSocket serverSocket;
 
     public Station(String myName, int myTcpPort, int myUdpPort) {
         this.myName = myName;
         this.myTcpPort = myTcpPort;
         this.myUdpPort = myUdpPort;
+        myPacketNumber = 0;
     }
 
     public Station(String myName) {
@@ -38,10 +40,11 @@ public class Station {
         try {
             Selector selector = Selector.open();
 
+            //We want datagram channel to block for simplicity
             DatagramChannel datagramChannel = DatagramChannel.open();
             datagramChannel.configureBlocking(false);
             datagramChannel.bind(new InetSocketAddress("127.0.0.1", myUdpPort));
-            datagramChannel.configureBlocking(false);
+//            datagramChannel.configureBlocking(false);
             byte[] buffer = new byte[DATAGRAM_BYTE_SIZE];
             DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
             SelectionKey key = datagramChannel.register(selector, SelectionKey.OP_READ);
@@ -66,28 +69,31 @@ public class Station {
 
                     //Each model may only need to send stuff
                     //Give the model access to the datagramChannel
-                    StationModel model = new StationModel(datagramChannel, selector);
-                    StationView view = new StationView();
-                    StationController controller = new StationController(model, view);
 
-                    if (key.isAcceptable()) {
-                        SocketChannel socketChannel = serverSocketChannel.accept();
-                        socketChannel.configureBlocking(false);
-                        int interestOps = SelectionKey.OP_READ;
-                        SelectionKey socketKey = socketChannel.register(selector, interestOps);
-                        ByteBuffer buf = ByteBuffer.allocate(2048);
-                        socketKey.attach(buf);
+                    StationModel httpModel = new StationModel(datagramChannel, selector);
+                    StationView httpView = new StationView();
+                    StationController httpController = new StationController(httpModel, httpView);
 
-                        System.out.println("Connection Accepted From:" + socketChannel.getRemoteAddress() + " By: " + socketChannel.getLocalAddress() + "\n");
-                    } else if (key.isReadable()) { //How do I know if I read the whole request       !!!!!!!!!!!!!!!!
-                        // Currently assume you will read the whole request
-                        if (key.channel() instanceof SocketChannel) {
+                    if (key.channel() instanceof SocketChannel || key.channel() instanceof ServerSocketChannel) {
+
+                        if (key.isAcceptable()) {
+                            SocketChannel socketChannel = serverSocketChannel.accept();
+                            socketChannel.configureBlocking(false);
+                            int interestOps = SelectionKey.OP_READ;
+                            SelectionKey socketKey = socketChannel.register(selector, interestOps);
+                            ByteBuffer buf = ByteBuffer.allocate(2048);
+                            socketKey.attach(buf);
+
+                            System.out.println("Connection Accepted From:" + socketChannel.getRemoteAddress() + " By: " + socketChannel.getLocalAddress() + "\n");
+                        } else if (key.isReadable()) { //How do I know if I read the whole request       !!!!!!!!!!!!!!!!
+                            // Currently assume you will read the whole request
                             SocketChannel client = (SocketChannel) key.channel();
 
 
                             ByteBuffer inputBuf = (ByteBuffer) key.attachment();
                             //Read the buffer
-                            while (client.read(inputBuf) > 0) ; //position is set to p +1 where there are p bytes read into ByteStrea,
+                            while (client.read(inputBuf) > 0)
+                                ; //position is set to p +1 where there are p bytes read into ByteStrea,
 
                             System.out.println("Client: " + client.getRemoteAddress() + " sent to " + client.getLocalAddress());
                             String httpRequest = new String(inputBuf.array()).trim();
@@ -97,7 +103,7 @@ public class Station {
                             inputBuf.clear(); //Clear ByteBuffer
 
 
-                            Router router = new Router(controller);
+                            Router router = new Router(httpController);
                             String[] httpRequestSplit = httpRequest.split("\n", 2);
                             String httpRequestFirstLine = httpRequestSplit[0];
 
@@ -110,50 +116,8 @@ public class Station {
                             //}
 
                             key.interestOps(SelectionKey.OP_WRITE); //Assuming youve read everything !!!!!!!!!!!!!!!!!!!!!
-                        } else if (key.channel() instanceof DatagramChannel) {
-                            datagramChannel = (DatagramChannel) key.channel();
-                            DatagramPacket inputDatagramPacket = (DatagramPacket) key.attachment();
 
-
-
-                            //Receive Datagram data and sender's address
-                            ByteBuffer inputDatagramData = ByteBuffer.allocate(DATAGRAM_BYTE_SIZE);
-                            InetSocketAddress senderAddress = (InetSocketAddress) datagramChannel.receive(inputDatagramData);
-
-                            System.out.println("Datagram Packet received from: " + senderAddress + " sent to " + datagramChannel.getLocalAddress());
-
-                            //Convert datagram data to string
-                            String datagramRequestString = new String(inputDatagramData.array()).trim();
-
-                            //Get first line of datagram
-                            String[] datagramRequestSplit = datagramRequestString.split("\n", 2);
-                            String datagramRequestHeader = datagramRequestSplit[0];
-                            String datagramRequestBody = "";
-                            if (datagramRequestSplit.length == 2) {
-                                datagramRequestBody = datagramRequestSplit[1].trim();
-                            }
-
-
-                            //Route the datagram to correct response depending based on datagrams first line
-                            Router router = new Router(controller);
-                            String datagramResponse = router.route(datagramRequestHeader, datagramRequestBody);
-                            if (datagramResponse.length() > 0) { //If there is a response send it.
-                                byte[] outBytes = datagramResponse.getBytes(StandardCharsets.UTF_8);
-                                //Set datagramPacket data response
-                                inputDatagramPacket.setData(outBytes);
-                                //Set datagramPacket response address
-                                inputDatagramPacket.setSocketAddress(senderAddress); //probably not necessary
-                                key.interestOps(SelectionKey.OP_WRITE);
-                            }
-                              ///NOT NECESSARILY!!!!!!!!!!!!!!!!
-
-                        } else {
-                            throw new Exception("Channel is not a SocketChannel or a DatagramChannel");
-                        }
-
-
-                    } else if (key.isWritable()) {
-                        if (key.channel() instanceof SocketChannel) {
+                        } else if (key.isWritable()) {
                             SocketChannel client = (SocketChannel) key.channel();
                             ByteBuffer outputBuffer = (ByteBuffer) key.attachment();
 
@@ -167,11 +131,51 @@ public class Station {
                             while (client.write(outputBuffer) > 0) ; //write to client
 
 
+                            client.close();
+                        }
 
-                            client.close(); //Assuming youve written everything!!!!!!!!!!!!!!!!!!!!!!!!!
+                    } else if (key.channel() instanceof DatagramChannel) {
+                        if (key.isReadable()) {
+                            datagramChannel = (DatagramChannel) key.channel();
+                            DatagramPacket inputDatagramPacket = (DatagramPacket) key.attachment();
+
+
+                            //If it is a request route the request
+                            //If its a response give it to the model that is expecting the response
+
+                            //Receive Datagram data and sender's address
+                            ByteBuffer inputDatagramData = ByteBuffer.allocate(DATAGRAM_BYTE_SIZE);
+                            InetSocketAddress senderAddress = (InetSocketAddress) datagramChannel.receive(inputDatagramData);
+
+                            System.out.println("Datagram Packet received from: " + senderAddress + " sent to " + datagramChannel.getLocalAddress());
+
+                            //Convert datagram data to string
+                            String datagramRequestString = new String(inputDatagramData.array()).trim();
+
+                            //Get first line of datagram
+                            String[] datagramRequestSplit = datagramRequestString.split("\n", 2);
+                            String datagramRequestHeader = datagramRequestSplit[0];
+                            //Find out what it is, feed info back to correct
+                            String datagramRequestBody = "";
+                            if (datagramRequestSplit.length == 2) {
+                                datagramRequestBody = datagramRequestSplit[1].trim();
+                            }
+
+                            StationController controller = new StationController(new StationModel(), new StationView());
+                            //Route the datagram to correct response depending based on datagrams first line
+                            Router router = new Router(controller);
+                            String datagramResponse = router.route(datagramRequestHeader, datagramRequestBody);
+                            if (datagramResponse.length() > 0) { //If there is a response send it.
+                                byte[] outBytes = datagramResponse.getBytes(StandardCharsets.UTF_8);
+                                //Set datagramPacket data response
+                                inputDatagramPacket.setData(outBytes);
+                                //Set datagramPacket response address
+                                inputDatagramPacket.setSocketAddress(senderAddress); //probably not necessary
+                                key.interestOps(SelectionKey.OP_WRITE);
+                            }
+                            ///NOT NECESSARILY!!!!!!!!!!!!!!!!
 
                         } else if (key.channel() instanceof DatagramChannel) {
-
                             DatagramChannel datagramChan = (DatagramChannel) key.channel();
                             DatagramPacket outputDatagramPacket = (DatagramPacket) key.attachment();
 
@@ -190,7 +194,10 @@ public class Station {
                             key.interestOps(SelectionKey.OP_READ);
 
                         }
+                    } else {
+                        throw new Exception("Channel is not a SocketChannel or a DatagramChannel");
                     }
+
                 }
 
             }
