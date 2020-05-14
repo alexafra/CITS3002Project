@@ -1,5 +1,3 @@
-import java.util.HashMap;
-import java.util.Set;
 import java.util.ArrayList;
 
 public class StationView {
@@ -12,12 +10,13 @@ public class StationView {
 
     public String getStationView() { return stationView; }
 
-    public void displayWholeStation(String myName, int myPort, String myFileName, ArrayList<StationNeighbour> neighbours) {
+    public String displayWholeStation(String myName, int myPort, String myFileName, ArrayList<StationNeighbour> neighbours) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayWholeStation(myName, myPort, myFileName, neighbours);
         response = response + responseHeader + "\n" + responseBody;
         stationView = response;
+        return response;
     }
 
     public String bodyDisplayWholeStation(String myName, int myPort, String myFileName, ArrayList<StationNeighbour> neighbours) {
@@ -25,8 +24,8 @@ public class StationView {
         String neighbourPorts = "";
 
         for (StationNeighbour neighbour : neighbours) {
-            neighbourNames = neighbourNames + neighbour.getName() + "\t";
-            neighbourPorts = neighbourPorts + neighbour.getPort() + "\t";
+            neighbourNames = neighbourNames + neighbour.getName() + "    ";
+            neighbourPorts = neighbourPorts + neighbour.getPort() + "    ";
         }
         String body = "";
         body = body + "<html>\n";
@@ -41,12 +40,32 @@ public class StationView {
         return body;
     }
 
-    public void displayConnections(String myName, int myPort, String neighbour, int portDestination, ArrayList<Connection> connections) {
+    public String displayConnections(String myName, int myPort, String neighbour, int portDestination, ArrayList<Connection> connections) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayConnections(myName, myPort, neighbour, portDestination, connections);
         response = response + responseHeader + "\n" + responseBody;
         stationView = response;
+        return response;
+    }
+
+    public String displayArrivalIsDeparture(String myName, int myPort) {
+        String response = "";
+        String responseHeader = goodHeader();
+        String responseBody = bodyDisplayArrivalIsDeparture(myName, myPort);
+        response = response + responseHeader + "\n" + responseBody;
+        stationView = response;
+        return response;
+    }
+
+    public String bodyDisplayArrivalIsDeparture(String myName, int myPort) {
+        String body = "";
+        body = body + "<html>\n";
+        body = body + "<body>\n";
+        body = body + "<h1>Your arrival location: " + myName + "Port: " + myPort + "is your departure location" + "</h1>\n";
+        body = body + "</body>\n";
+        body = body + "</html>\n";
+        return body;
     }
 
 
@@ -61,7 +80,7 @@ public class StationView {
             } else {
                 vehicleType = "train";
             }
-            connectionsString = "Take the " + vehicleType + connection.getVehicleName() + " From " + connection.getStopName();
+            connectionsString = "Take the " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
             connectionsString = connectionsString + " At " + myName + " to " + neighbour + " Departure Time: ";
             connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: ";
             connectionsString = connectionsString + connection.getArrivalTime() + "\n";
@@ -77,12 +96,13 @@ public class StationView {
         return body;
     }
 
-    public void displayNoConnectionAvailable(String myName, int myPort, String neighbour) {
+    public String displayNoConnectionAvailable(String myName, int myPort, String neighbour) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayNoConnectionAvailable(myName, myPort, neighbour);
         response = response + responseHeader + "\n" + responseBody;
         stationView = response;
+        return response;
     }
 
     public String bodyDisplayNoConnectionAvailable(String myName, int myPort, String neighbour) {

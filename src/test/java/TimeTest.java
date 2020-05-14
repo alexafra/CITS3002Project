@@ -2,7 +2,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,9 +44,9 @@ public class TimeTest {
     @Test
     @DisplayName("it should get time")
     public void fromStringTest() {
-        time1.fromString(timesString[0]);
-        time2.fromString(timesString[1]);
-        time3.fromString(timesString[2]);
+        time1.populateFromString(timesString[0]);
+        time2.populateFromString(timesString[1]);
+        time3.populateFromString(timesString[2]);
         assertThat(time1.getHour() == 7);
         assertThat(time2.getHour() == 8);
         assertThat(time3.getHour() == 14);

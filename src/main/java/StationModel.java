@@ -1,6 +1,7 @@
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -8,25 +9,45 @@ import java.util.HashMap;
 import java.util.List;
 
 public class StationModel {
-    private static MyFileContents fileContents;
+    private static PersistentServerData fileContents;
     private static final int DATAGRAM_BYTE_SIZE = 128;
-    private DatagramChannel datagramChannel;
-    private Selector selector;
 
     private String myName;
     private String myFile;
     private int myPort;
+
     private HashMap<String, StationNeighbour> myNeighbours;
 
-    public StationModel(DatagramChannel datagramChannel, Selector selector) {
-        this.datagramChannel = datagramChannel;
+    private SelectionKey datagramChannelKey;
+    private Selector selector;
+    private Station station;
+    private boolean awaitingResponses;
+    private ArrayList<Integer> awaitingPacketNumbers;
+    private ArrayList<Connection> connections;
+
+
+    public StationModel(SelectionKey datagramChannelKey, Selector selector, Station station) {
+        this.datagramChannelKey = datagramChannelKey;
         this.selector = selector;
         fileContents.updateFileContents();
+        this.station = station;
+        this.awaitingPacketNumbers = new ArrayList<>();
+        this.awaitingResponses = false;
+        this.connections = new ArrayList<>();
+    }
+    public StationModel() {
+        this(null, null, null);
     }
 
-    public StationModel() {
-        this(null, null);
+    public static void setFileContents(PersistentServerData fileContents) {
+        StationModel.fileContents = fileContents;
     }
+
+    public boolean isAwaitingResponses() {
+        return awaitingResponses;
+    }
+
+
 
 
     public void setMyName(String myName) { this.myName = myName; }
@@ -35,7 +56,9 @@ public class StationModel {
 
     public void setMyPort(int myPort) { this.myPort = myPort; }
 
-    public static void setFileContents(MyFileContents fileContents) { StationModel.fileContents = fileContents; }
+    public ArrayList<Integer> getAwaitingPacketNumbers() {
+        return awaitingPacketNumbers;
+    }
 
 
     public int getMyUdpPort() {
@@ -48,108 +71,110 @@ public class StationModel {
 
     public String getMyName() { return fileContents.getMyName(); }
 
+    private void receiveMissingNeighbourPort() {
 
-    public String[] parseUdpResponse(ByteBuffer response) {
-        String responseString = new String(response.array());
-
-
-        String[] headerAndBody = responseString.split("\n", 2);
-        String header = headerAndBody[0];
-        String body = headerAndBody[1].trim();
-
-        String[] parseFirstLine = header.split(" ");
-
-
-        String method = parseFirstLine[0];
-        String urlString = parseFirstLine[1];
-
-        String fragment = "";
-        String urlLocation = "";
-        String[] urlParser = urlString.split("#");
-        if (urlParser.length == 2) {
-            urlLocation = urlParser[0];
-            fragment = urlParser[1];
-        }
-
-        String[] requestLineInfo = {method, urlLocation, fragment, body};
-
-
-        return requestLineInfo;
     }
 
-    private void getMissingNeighbourPorts() {
+    private void receiveConnections() {
+
+    }
+
+    //Different headers?
+
+
+    public void receiveResponse(String[] header, String body, String methodAwaitingResponse) {
+        String[] bodyLines = body.split("\n");
+
+        if (methodAwaitingResponse.equals("getHttp()")) { //getting neighbour ports
+            String[] values = bodyLines[1].split(",");
+            String name = values[0];
+            int port = Integer.parseInt(values[1]);
+            setNamePort(name, port);
+        } else if (methodAwaitingResponse.equals("getHttp(key,value)")) {
+            //You wont receive yourself
+            //RECURSIVE PATTERN HARD
+            //LOGIC TO ADD - DID YOU HTTP REQUEST THIS OR DO YOU NEED TO SEND IT ON?
+            //ASSUME YOU HTTP REQUEST THIS, i.e can only ask neighbour - ONE HOP
+            //SAME THING FROM THE MODELS POV, MODEL FINDING FASTEST ROUTE FROM IT TO DESTINATION
+            ArrayList<Connection> possibleConnections = new ArrayList<>();
+            for (int i = 0; i < bodyLines.length; i++) {
+                Connection connection = new Connection();
+                connection.populateFromString(bodyLines[i]);
+                possibleConnections.add(connection);
+            }
+            if (!possibleConnections.get(0).equals(Connection.NO_CONNECTION)) {
+
+            }
+
+            //Variables in each line: depPort,depName,depStopName,vehicleName,depTime,arrPort,arrName,arrTime
+
+        }
+        awaitingPacketNumbers.removeIf(packetNo -> packetNo.equals(Integer.parseInt(header[3])));
+        this.awaitingResponses = !awaitingPacketNumbers.isEmpty();
+    }
+
+    //It needs to wait for a response and read the response
+
+    public HashMap<String, StationNeighbour> getNeighbours() {
         List<Integer> portsWithoutNames = fileContents.getPortsWithoutNames();
 
-        try {
-            for (Integer portWithoutName : portsWithoutNames) {
-                String requestString = UdpPacketConstructor.getPortName();
+        for (Integer portWithoutName : portsWithoutNames) {
+            try {
+                int packetNo = station.getPacketCount();
+                awaitingPacketNumbers.add(packetNo);
+                station.incrementPacketCount();
+                String requestString = UdpPacketConstructor.getPortName(packetNo);
                 ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
                 InetSocketAddress destination = new InetSocketAddress("127.0.0.1", portWithoutName);
-                datagramChannel.send(requestBytes, destination); //Not asking the Selector key
+                DatagramChannel channel = (DatagramChannel) datagramChannelKey.channel();
+                channel.send(requestBytes, destination); //Not asking the Selector key
 
-//                ByteBuffer responseBytes = ByteBuffer.allocate(DATAGRAM_BYTE_SIZE);
-//                datagramChannel.receive(responseBytes);
-//
-//                String[] responseInfo = parseUdpResponse(responseBytes);
-//                if (responseInfo[0].equals("POST") && responseInfo[1].equals("/") && responseInfo[2].equals("name")) {
-//                    String[] bodyLines = responseInfo[3].split("\n", 2);
-//                    String[] variables = bodyLines[0].split(",");
-//                    String[] values = bodyLines[1].split(",");
-//                    if (variables[0].equals("myName") && variables[1].equals("myPort")) {
-//                        String name = values[0];
-//                        int port = Integer.parseInt(values[1]);
-//                        setNamePort(name, port);
-//                    }
-//
-//                } else {
-//                    System.out.println("SOMETHING WRONG!!!!!!!!");
-//                }
+                this.awaitingResponses = true;
+            } catch (Exception e) {
+                System.out.println("Err: " + e);
+                System.exit(1);
+            }
+        }
+        return fileContents.getNeighbours();
+    }
 
 
-//                datagramChannel.re
+    public ArrayList<Connection> getConnections(String destinationName) {
+        if (destinationName.equals(fileContents.getMyName())) return new ArrayList<>();
 
-                //It needs to wait for a response and read the response
+        HashMap<String, StationNeighbour> neighbours = getNeighbours(); //Should only start this if this is alredy done
 
+        ArrayList<Connection> connections = new ArrayList<>();
+        if (neighbours.containsKey(destinationName)) { //'Direct Route'
+
+            StationNeighbour neighbour = neighbours.get(destinationName);
+            Connection connection = neighbour.getConnections().get(0); ////!!!!!!!!!!!!!!!!!!WIll have to change to soonest time arrival
+
+            this.connections.add(connection);
+        }
+
+        try {
+            for (StationNeighbour neighbour : neighbours.values()) {
+                int packetNo = station.getPacketCount();
+                awaitingPacketNumbers.add(packetNo);
+                station.incrementPacketCount();
+
+                int neighbourPort = neighbour.getPort();
+                String requestString = UdpPacketConstructor.getConnections(packetNo, destinationName);
+                ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
+                InetSocketAddress destination = new InetSocketAddress("127.0.0.1", neighbourPort);
+                DatagramChannel channel = (DatagramChannel) datagramChannelKey.channel();
+                channel.send(requestBytes, destination); //Not asking the Selector key
+
+                this.awaitingResponses = true;
 
             }
         } catch (Exception e) {
             System.out.println("Err: " + e);
             System.exit(1);
-        }//DONT RESPOND IF NOT finished
-
-    }
-
-    public HashMap<String, StationNeighbour> getNeighbours() {
-        getMissingNeighbourPorts();
-        /*
-        Need to call other ports to get their neighbours
-        Need to Send UDP request to other Servers
-         */
-
-
-        return fileContents.getNeighbours();
-    }
-
-
-    public ArrayList<Connection> getConnections(String destination) {
-        getMissingNeighbourPorts();
-        HashMap<String, StationNeighbour> neighbours = fileContents.getNeighbours();
-
-        ArrayList<Connection> connections = new ArrayList<>();
-        if (neighbours.containsKey(destination)) { //'Direct Route'
-
-            StationNeighbour neighbour = neighbours.get(destination);
-            Connection connection = neighbour.getConnections().get(0); ////!!!!!!!!!!!!!!!!!!WIll have to change
-
-            connections.add(connection);
-
-        } else {
-            //This is the big boys work
-//            String myName = model.getMyName();
-//            int myPort = model.getMyTcpPort();
-//            model.getConnectionsTo(value);
-//            //
         }
+
+
         return connections;
 
     }

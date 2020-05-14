@@ -51,7 +51,7 @@ public class Time {
      * Sets hour and time based on a String
      * @param time in the format "hh:mm"
      */
-    public void fromString(String time) {
+    public void populateFromString(String time) {
         String[] hourMinuteString = time.split("[:]");
         this.hour = Integer.parseInt( hourMinuteString[0]);
         this.minute = Integer.parseInt( hourMinuteString[1]);

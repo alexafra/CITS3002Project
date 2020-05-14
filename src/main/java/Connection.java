@@ -1,54 +1,76 @@
 public class Connection {
-    private String departureLocation;
-    private String arrivalLocation;
+    public static Connection NO_CONNECTION = new Connection(0, "", "", "", 0, "", new Time(), new Time());
+    private String departureName;
     private int departurePort;
     private int arrivalPort;
     private Time departureTime;
     private Time arrivalTime;
     private String vehicleName; //Line one bus 12
-    private String stopName; //platform b or stopA
+    private String arrivalName;
+    private String departureStopName; //platform b or stopA
 
-    public Connection(String departureLocation, String arrivalLocation, int departurePort, int arrivalPort, Time departureTime, Time arrivalTime, String vehicleName, String stopName) {
-        this.departureLocation = departureLocation;
-        this.arrivalLocation = arrivalLocation;
+    //depPort,depName,depStopName,vehicleName,depTime,arrTime,arrPort,arrName
+    public Connection(int departurePort, String departureName, String departureStopName, String vehicleName, int arrivalPort, String arrivalName, Time departureTime, Time arrivalTime) {
         this.departurePort = departurePort;
+        this.departureName = departureName;
+        this.departureStopName = departureStopName;
+        this.vehicleName = vehicleName;
         this.arrivalPort = arrivalPort;
+        this.arrivalName = arrivalName;
         this.departureTime = departureTime;
         this.arrivalTime = arrivalTime;
-        this.vehicleName = vehicleName;
-        this.stopName = stopName;
+
+
     }
 
     public Connection() {
-        this ("", "", 0, 0, new Time(), new Time(), "", "");
+        this(0, "", "", "", 0, "", new Time(), new Time());
     }
 
-    public String getDepartureLocation() { return departureLocation; }
-    public String getArrivalLocation() { return arrivalLocation; }
+    public String getDepartureName() {
+        return departureName;
+    }
+
+    public void setDepartureName(String departureName) {
+        this.departureName = departureName;
+    }
     public int getDeparturePort() { return departurePort; }
     public int getArrivalPort() { return arrivalPort; }
 
     public Time getDepartureTime() { return departureTime; }
     public Time getArrivalTime() { return arrivalTime; }
     public String getVehicleName() { return vehicleName; }
-    public String getStopName() { return stopName; }
 
-    public void setDepartureLocation(String departureLocation) { this.departureLocation = departureLocation; }
-    public void setArrivalLocation(String arrivalLocation) { this.arrivalLocation = arrivalLocation; }
+    public String getArrivalName() {
+        return arrivalName;
+    }
+
+    public void setArrivalName(String arrivalName) {
+        this.arrivalName = arrivalName;
+    }
+
+    public String getDepartureStopName() {
+        return departureStopName;
+    }
     public void setDeparturePort(int departurePort) { this.departurePort = departurePort; }
     public void setArrivalPort(int arrivalPort) { this.arrivalPort = arrivalPort; }
     public void setDepartureTime(Time departureTime) { this.departureTime = departureTime; }
     public void setArrivalTime(Time arrivalTime) { this.arrivalTime = arrivalTime; }
     public void setVehicleName(String vehicleName) { this.vehicleName = vehicleName; }
-    public void setStopName(String stopName) { this.stopName = stopName; }
+
+    public void setDepartureStopName(String departureStopName) {
+        this.departureStopName = departureStopName;
+    }
 
     /**
      *
      * @return a string representation of the Connection object
      */
+    //depPort,depName,depStopName,vehicleName,arrPort,arrName,depTime,arrTime
     public String toString() {
         String routeString = "";
-        routeString = routeString + departureTime.toString() + "," + vehicleName + "," + stopName + "," + arrivalTime.toString();
+        routeString = routeString + departurePort + "," + departureName + "," + departureStopName + "," + vehicleName +
+                "," + arrivalPort + "," + arrivalName + "," + departureTime + "," + arrivalTime;
         return routeString;
     }
 
@@ -57,13 +79,18 @@ public class Connection {
      * sets a route objects internal variables based on a String
      * @param routeString is the string representation of the route
      */
-    public void populateFromString(String routeString) {
-        String[] splitRouteString = routeString.split(",");
-        this.departureTime.fromString(splitRouteString[0]);
-        this.vehicleName = splitRouteString[1];
-        this.stopName = splitRouteString[2];
-        this.arrivalTime.fromString(splitRouteString[3]);
-        this.arrivalLocation = splitRouteString[4];
+    public void populateFromString(String connectionString) {
+        String[] connectionStringSplit = connectionString.split(",");
+
+        this.departurePort = Integer.parseInt(connectionStringSplit[0]);
+        this.departureName = connectionStringSplit[1];
+        this.departureStopName = connectionStringSplit[2];
+        this.vehicleName = connectionStringSplit[3];
+        this.arrivalPort = Integer.parseInt(connectionStringSplit[4]);
+        this.arrivalName = connectionStringSplit[5];
+        this.departureTime.populateFromString(connectionStringSplit[6]);
+        this.arrivalTime.populateFromString(connectionStringSplit[7]);
+
     }
 
 
@@ -76,14 +103,14 @@ public class Connection {
         if (connectionOther == null || connectionOther.getClass() != getClass())
             return false;
 
-        boolean sameDepartureLocation = this.getDepartureLocation() == connectionOther.getDepartureLocation();
-        boolean sameArrivalLocation = this.getArrivalLocation() == connectionOther.getArrivalLocation();
+        boolean sameDepartureLocation = this.getDepartureName() == connectionOther.getDepartureName();
+        boolean sameArrivalLocation = this.getArrivalName() == connectionOther.getArrivalName();
         boolean sameDeparturePort = this.getDeparturePort() == connectionOther.getDeparturePort();
         boolean sameArrivalPort = this.getArrivalPort() == connectionOther.getArrivalPort();
 
         boolean sameDepartureTime = this.getDepartureTime() == connectionOther.getDepartureTime();
         boolean sameVehicleName = this.getVehicleName() == connectionOther.getVehicleName();
-        boolean sameStopName = this.getStopName() == connectionOther.getStopName();
+        boolean sameStopName = this.getDepartureStopName() == connectionOther.getDepartureStopName();
         boolean sameArrivalTime = this.getArrivalTime() == connectionOther.getArrivalTime();
 
         return sameDepartureLocation && sameArrivalLocation && sameDeparturePort && sameArrivalPort &&sameDepartureTime

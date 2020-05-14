@@ -1,18 +1,17 @@
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
 
 /*
 You may need to add some persistence for file contents and neighbour name-port values
-Where the model "queries" the persistent file for information but the MyFileContents class
+Where the model "queries" the persistent file for information but the PersistentServerData class
 survives for the entire lifetime of the server
  */
 public class Station {
@@ -21,20 +20,68 @@ public class Station {
     private String myName;
     private int myTcpPort;
     private int myUdpPort;
-    private int myPacketNumber;
     private ServerSocket serverSocket;
+    private HashMap<Integer, StationController> controllerAwaitingResponse;
+
+    private int myPacketNumber;
 
     public Station(String myName, int myTcpPort, int myUdpPort) {
         this.myName = myName;
         this.myTcpPort = myTcpPort;
         this.myUdpPort = myUdpPort;
-        myPacketNumber = 0;
+        this.myPacketNumber = 0;
+        this.controllerAwaitingResponse = new HashMap<>();
+
+    }
+
+    public static void main(String[] args) {
+        String fileLocation = "/Users/alexanderfrazis/Desktop/UWAUnits/2020Sem1/CITS3002/NetworksJavaProject/src/main/serverFiles/";
+        String serverName = args[0];
+        int myTcpPort = Integer.parseInt(args[1]);
+        int myUdpPort = Integer.parseInt(args[2]);
+
+        ArrayList<Integer> neighbourPorts = new ArrayList<>();
+        for (int i = 3; i < args.length; i++) {
+            if (args[i].matches("\\d+")) {
+                neighbourPorts.add(Integer.parseInt(args[i]));
+            } else {
+                break; //probably hit &
+            }
+        }
+
+        //Until we get a better idea of where these go
+        PersistentServerData fileContents = new PersistentServerData(fileLocation + "tt-" + serverName, serverName, myTcpPort, myUdpPort, neighbourPorts);
+        StationModel.setFileContents(fileContents);
+
+        Station myStation = new Station(serverName, myTcpPort, myUdpPort);
+        myStation.runServer();
+    }
+
+    public void incrementPacketCount() {
+        myPacketNumber = (myPacketNumber + 1) % 4096;
+    }
+
+    public void addControllerAwaitingResponse(Integer packetNo, StationController controller) {
+        controllerAwaitingResponse.put(packetNo, controller);
+    }
+
+    public void removeControllerAwaitingResponse(Integer packetNo) {
+        controllerAwaitingResponse.remove(packetNo);
     }
 
     public Station(String myName) {
         this(myName, 0, 0);
     }
 
+    public int getPacketCount() {
+        return myPacketNumber;
+    }
+
+    /*
+    1) Any type of model can be waiting on packets
+    2) A model can be waiting on multiple packets
+    3)
+     */
     public void runServer() {
 
         try {
@@ -47,8 +94,8 @@ public class Station {
 //            datagramChannel.configureBlocking(false);
             byte[] buffer = new byte[DATAGRAM_BYTE_SIZE];
             DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
-            SelectionKey key = datagramChannel.register(selector, SelectionKey.OP_READ);
-            key.attach(datagramPacket);
+            SelectionKey datagramChannelKey = datagramChannel.register(selector, SelectionKey.OP_READ);
+            datagramChannelKey.attach(datagramPacket);
 
             //TCP Socket Channel
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
@@ -64,15 +111,16 @@ public class Station {
                 Iterator<SelectionKey> iterator = readySet.iterator();
 
                 while (iterator.hasNext()) {
-                    key = iterator.next();//Combines channel with key of selector and keyType
+                    SelectionKey key = iterator.next();//Combines channel with key of selector and keyType
                     iterator.remove();
 
                     //Each model may only need to send stuff
                     //Give the model access to the datagramChannel
 
-                    StationModel httpModel = new StationModel(datagramChannel, selector);
-                    StationView httpView = new StationView();
-                    StationController httpController = new StationController(httpModel, httpView);
+                    /*
+                    SocketChannelKeys have  ByteBuffers attached
+                    DatagramChannelKeys have datagramPackets attached
+                     */
 
                     if (key.channel() instanceof SocketChannel || key.channel() instanceof ServerSocketChannel) {
 
@@ -93,7 +141,7 @@ public class Station {
                             ByteBuffer inputBuf = (ByteBuffer) key.attachment();
                             //Read the buffer
                             while (client.read(inputBuf) > 0)
-                                ; //position is set to p +1 where there are p bytes read into ByteStrea,
+                                ; //position is set to p + 1 where there are p bytes read into ByteStrea,
 
                             System.out.println("Client: " + client.getRemoteAddress() + " sent to " + client.getLocalAddress());
                             String httpRequest = new String(inputBuf.array()).trim();
@@ -103,19 +151,22 @@ public class Station {
                             inputBuf.clear(); //Clear ByteBuffer
 
 
+                            StationModel httpModel = new StationModel(datagramChannelKey, selector, this);
+                            StationView httpView = new StationView();
+                            //Give controller ther Http Key
+                            StationController httpController = new StationController(httpModel, httpView, key, this);
+                            // controllerWaitingForResponse.
+
+
                             Router router = new Router(httpController);
                             String[] httpRequestSplit = httpRequest.split("\n", 2);
                             String httpRequestFirstLine = httpRequestSplit[0];
+                            String httpRequestBody = "";
+                            if (httpRequestSplit.length == 2) {
+                                httpRequestBody = httpRequestSplit[1];
+                            }
 
-                            //Think carefully through weird cases
-
-                            //if (httpRequestSplit.length > 1) { //Got the first line of request
-                            String viewString = router.route(httpRequestFirstLine, "");
-                            byte[] outBytes = viewString.getBytes(StandardCharsets.UTF_8);
-                            inputBuf.put(outBytes);
-                            //}
-
-                            key.interestOps(SelectionKey.OP_WRITE); //Assuming youve read everything !!!!!!!!!!!!!!!!!!!!!
+                            router.route(httpRequestFirstLine, httpRequestBody);
 
                         } else if (key.isWritable()) {
                             SocketChannel client = (SocketChannel) key.channel();
@@ -135,6 +186,7 @@ public class Station {
                         }
 
                     } else if (key.channel() instanceof DatagramChannel) {
+                        //Channel uses ByteBuffer, but we have to use DatagramPacket to keep destination information
                         if (key.isReadable()) {
                             datagramChannel = (DatagramChannel) key.channel();
                             DatagramPacket inputDatagramPacket = (DatagramPacket) key.attachment();
@@ -146,46 +198,61 @@ public class Station {
                             //Receive Datagram data and sender's address
                             ByteBuffer inputDatagramData = ByteBuffer.allocate(DATAGRAM_BYTE_SIZE);
                             InetSocketAddress senderAddress = (InetSocketAddress) datagramChannel.receive(inputDatagramData);
-
-                            System.out.println("Datagram Packet received from: " + senderAddress + " sent to " + datagramChannel.getLocalAddress());
+                            inputDatagramPacket.setSocketAddress(senderAddress); //Set destination address for reply
+                            inputDatagramPacket.setData(inputDatagramData.array());
 
                             //Convert datagram data to string
-                            String datagramRequestString = new String(inputDatagramData.array()).trim();
+                            String datagramString = new String(inputDatagramPacket.getData()).trim();
+                            System.out.println("Datagram Packet received from: " + senderAddress + " sent to " + datagramChannel.getLocalAddress() + " contains: ");
+                            System.out.println(datagramString);
+                            System.out.println("\n");
 
                             //Get first line of datagram
-                            String[] datagramRequestSplit = datagramRequestString.split("\n", 2);
-                            String datagramRequestHeader = datagramRequestSplit[0];
-                            //Find out what it is, feed info back to correct
-                            String datagramRequestBody = "";
-                            if (datagramRequestSplit.length == 2) {
-                                datagramRequestBody = datagramRequestSplit[1].trim();
+                            String[] datagramSplit = datagramString.split("\n", 2);
+                            String datagramHeader = datagramSplit[0];
+
+                            String datagramBody = "";
+                            if (datagramSplit.length == 2) {
+                                datagramBody = datagramSplit[1].trim();
                             }
 
-                            StationController controller = new StationController(new StationModel(), new StationView());
-                            //Route the datagram to correct response depending based on datagrams first line
-                            Router router = new Router(controller);
-                            String datagramResponse = router.route(datagramRequestHeader, datagramRequestBody);
-                            if (datagramResponse.length() > 0) { //If there is a response send it.
-                                byte[] outBytes = datagramResponse.getBytes(StandardCharsets.UTF_8);
-                                //Set datagramPacket data response
-                                inputDatagramPacket.setData(outBytes);
-                                //Set datagramPacket response address
-                                inputDatagramPacket.setSocketAddress(senderAddress); //probably not necessary
-                                key.interestOps(SelectionKey.OP_WRITE);
+                            String[] headerWords = datagramHeader.split(" ");
+                            String firstHeaderWord = headerWords[0];
+
+                            if (firstHeaderWord.equals("RESPONSE")) {
+                                int packetNumber = Integer.parseInt(headerWords[3]);
+                                StationController controller = controllerAwaitingResponse.get(packetNumber);
+                                controller.receiveResponse(headerWords, datagramBody);
+                                //Send to model based on packetNo.
+                                //Let existing model/view/controller deal with it
+                            } else {
+                                //Create a new station/model/view
+                                StationModel udpModel = new StationModel(datagramChannelKey, selector, this);//key == datagramChannelKey
+                                StationView udpView = new StationView();
+                                StationController controller = new StationController(udpModel, udpView, datagramChannelKey, this); //View probs not necessary
+                                //Route the datagram to correct response depending based on datagrams first line
+                                Router router = new Router(controller);
+                                router.route(datagramHeader, datagramBody);
+//
                             }
+                            //Find out what it is, feed info back to correct
+
                             ///NOT NECESSARILY!!!!!!!!!!!!!!!!
 
-                        } else if (key.channel() instanceof DatagramChannel) {
+                        } else if (key.isWritable()) {
                             DatagramChannel datagramChan = (DatagramChannel) key.channel();
                             DatagramPacket outputDatagramPacket = (DatagramPacket) key.attachment();
 
                             //get address to send datagram response to
-                            SocketAddress destinationAddress = outputDatagramPacket.getSocketAddress();
+                            InetSocketAddress destinationAddress = (InetSocketAddress) outputDatagramPacket.getSocketAddress();
                             //get data of the datagram response you want to send
                             byte[] datagramOutputBytes = outputDatagramPacket.getData();
                             ByteBuffer datagramOutput = ByteBuffer.wrap(datagramOutputBytes);
 
                             //Need flip?
+                            System.out.println("Sending datagram packet to: " + destinationAddress.getPort() + " from " + myUdpPort + " containing: ");
+                            System.out.println(new String(datagramOutputBytes));
+                            System.out.println("\n");
 
                             datagramChan.send(datagramOutput, destinationAddress);
 
@@ -208,68 +275,4 @@ public class Station {
         }
     }
 
-
-    public static void main(String[] args) {
-        String fileLocation = "/Users/alexanderfrazis/Desktop/UWAUnits/2020Sem1/CITS3002/NetworksJavaProject/src/main/serverFiles/";
-        String serverName = args[0];
-        int myTcpPort = Integer.parseInt(args[1]);
-        int myUdpPort = Integer.parseInt(args[2]);
-
-        ArrayList<Integer> neighbourPorts = new ArrayList<>();
-        for (int i = 3; i < args.length; i ++) {
-            if (args[i].matches("\\d+")) {
-                neighbourPorts.add(Integer.parseInt(args[i]));
-            } else {
-                break; //probably hit &
-            }
-        }
-
-        //Until we get a better idea of where these go
-        MyFileContents fileContents = new MyFileContents(fileLocation + "tt-" + serverName, serverName, myTcpPort, myUdpPort, neighbourPorts);
-        StationModel.setFileContents(fileContents);
-
-        Station myStation = new Station(serverName, myTcpPort, myUdpPort);
-        myStation.runServer();
-    }
-
 }
-
-
-
-
-//        try {
-//            serverSocket = new ServerSocket(myPort);
-//            System.out.println("Now bound to port " + myPort);
-//            serverSocket.setSoTimeout(1000000);
-//
-//
-//            System.out.println("About to listen traffic on my port " + myPort);
-//            try {
-//                Socket socket = serverSocket.accept();
-//                System.out.println("Received request at " + myName + " from: " + socket.getPort());
-//
-//                BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//                PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
-//
-//                Router router = new Router();
-//                String httpRequestLine;
-//
-//                String viewString = null;
-//                if (input.ready() && (httpRequestLine = input.readLine()) != null) {
-//                    viewString = router.route(httpRequestLine);
-//                }
-//                if (viewString != null) {
-//                    output.write(viewString);
-//                }
-//                output.close();
-//                input.close();
-//                socket.close();
-//            } catch (Exception e) {
-//                System.out.println("Err: " + e);
-//                System.exit(1);
-//            }
-//
-//        } catch (Exception e) {
-//            System.out.println("Err: " + e);
-//            System.exit(1);
-//        }

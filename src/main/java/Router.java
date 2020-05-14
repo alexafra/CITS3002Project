@@ -11,60 +11,24 @@ public class Router {
     }
 
 
-    public String route(String httpRequestLine, String body) {
-        String[] urlSummary = this.parseRequestLine(httpRequestLine);
-        String method = urlSummary[0];
-        String location = urlSummary[1];
-
-        //IS it a request or response
-
-        String response = "";
-
-        if (location.equals("/")) { //Station controller
-
-
-            String key = urlSummary[2];
-            String value = urlSummary[3];
-            String fragment = urlSummary[4];
-
-            if (method.equals("GET")) { //Get method - TCP
-                if (key != "" && key != null && value != "" && value != null) { //single key-value
-                    response = controller.get(key, value);
-
-                } else if (fragment.equals("name")) { //UDP Name Request
-                    response = controller.getName();
-
-                } else { //no key-valuev //General GET method - TCP
-                    response = controller.get();
-                }
-            } else if (method.equals("POST")) { //Udp Name Post
-                if (fragment.equals("name")) {
-                    controller.postName(body); //No response ... Maybe an ACK?
-                }
-
-            }
-
-            return response;
-        }
-        return ""; //Could not map url to a controller method - should do nothing
-    }
-
-
-
-
     /**
-     * Should return request line method, location, first key-value pair, fragment
+     * Should return request line method, location, first key-value pair, fragment, protocol, packetNo
      * @param httpRequestLine
      * @return
      */
-    public String[] parseRequestLine(String httpRequestLine) {
-        String[] requestLineInfo = {"", "", "", "", ""};
+    public static String[] parseRequestLine(String httpRequestLine) {
+        String[] requestLineInfo = {"", "", "", "", "", "", ""};
 
         String[] requestParser = httpRequestLine.split(" ");
 
         if (requestParser.length > 2) {
             String method = requestParser[0];
             String url = requestParser[1];
+            String protocol = requestParser[2];
+            String packetNo = "";
+            if (protocol.equals("ALEX/1.0")) {
+                packetNo = requestParser[3];
+            }
             String[] urlParser = url.split("\\?");
             String location = urlParser[0];
 
@@ -97,11 +61,56 @@ public class Router {
             requestLineInfo[2] = key;
             requestLineInfo[3] = value;
             requestLineInfo[4] = fragment;
+            requestLineInfo[5] = protocol;
+            requestLineInfo[6] = packetNo;
         }
 
-
-
         return requestLineInfo;
+    }
+
+    public String route(String httpRequestLine, String body) {
+        String[] urlSummary = Router.parseRequestLine(httpRequestLine);
+
+
+        //IS it a request or response
+
+        String response = "";
+        String method = urlSummary[0];
+        String location = urlSummary[1];
+        String key = urlSummary[2];
+        String value = urlSummary[3];
+        String fragment = urlSummary[4];
+        String protocol = urlSummary[5];
+
+        boolean requestHasKeyValuePair = key != null && key.equals("to") && value != null && !value.equals("");
+
+        if (protocol.equals("ALEX/1.0")) {
+            int packetNo = Integer.parseInt(urlSummary[6]);
+            if (location.equals("/")) { //Station controller
+                if (method.equals("GET")) { //Get method - TCP
+                    if (requestHasKeyValuePair) { //single key-value
+                        controller.getUdp(key, value, packetNo); //Not yet implemented
+
+                    } else if (fragment.equals("name")) { //UDP Name Request
+                        controller.getNameUdp(packetNo); //implemented
+                    }
+                }
+            }
+            //Alex routing
+        } else {
+            if (location.equals("/")) { //Station controller
+                if (method.equals("GET")) { //Get method - TCP
+                    if (requestHasKeyValuePair) { //single key-value
+                        controller.getHttp(value); //providing destination arguments
+                    } else { //no key-valuev //General GET method - TCP
+                        controller.getHttp(); //Providing general info
+                    }
+                }
+                return response;
+            }
+        }
+
+        return ""; //Could not map url to a controller method - should do nothing
     }
 
 }
