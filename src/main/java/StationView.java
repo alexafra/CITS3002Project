@@ -31,7 +31,7 @@ public class StationView {
             } else {
                 vehicleType = "train ";
             }
-            connectionsString = "Take the " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
+            connectionsString = "Take " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
             connectionsString = connectionsString + " At " + connection.getDepartureName() + " to " + connection.getArrivalName() + " Departure Time: ";
             connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: " + connection.getArrivalTime() + "\n";
         }
@@ -80,7 +80,7 @@ public class StationView {
         String body = "";
         body = body + "<html>\n";
         body = body + "<body>\n";
-        body = body + "<h1>There is no known route from: " + myName + " to your destination: " + neighbour + "</h1>\n";
+        body = body + "<h1>There is no known route from: " + myName + " to your destination: " + neighbour + " today</h1>\n";
         body = body + "</body>\n";
         body = body + "</html>\n";
         return body;
@@ -122,7 +122,7 @@ public class StationView {
 
         for (StationNeighbour neighbour : neighbours) {
             neighbourNames = neighbourNames + neighbour.getName() + "    ";
-            neighbourPorts = neighbourPorts + neighbour.getPort() + "    ";
+            neighbourPorts = neighbourPorts + neighbour.getUdpPort() + "    ";
         }
         String body = "";
         body = body + "<html>\n";

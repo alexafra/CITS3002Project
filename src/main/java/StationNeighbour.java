@@ -3,33 +3,43 @@ import java.util.ArrayList;
 
 public class StationNeighbour {
     private String name;
-    private int port;
+    private int udpPort;
     private ArrayList<Connection> connections; //probably want to order connections by arrival or departure time or both
 
 
-    public StationNeighbour(String name, int port, ArrayList<Connection> connections) {
+    public StationNeighbour(String name, int udpPort, ArrayList<Connection> connections) {
         this.name = name;
-        this.port = port;
+        this.udpPort = udpPort;
         this.connections = connections;
     }
 
-    public StationNeighbour(String name, int port) {
-        this(name, port, new ArrayList<>());
+
+    public StationNeighbour(String name) {
+        this(name, -1, new ArrayList<>());
     }
 
-    public StationNeighbour() {
-        this("", 0, new ArrayList<>());
-    }
+    //Dead
+//    public StationNeighbour() {
+//        this("", -1, new ArrayList<>());
+//    }
+
+//    public StationNeighbour(String name, int port) {
+//        this(name, port, new ArrayList<>());
+//    }
 
     public String getName() { return name; }
 
-    public int getPort() { return port; }
+    public int getUdpPort() {
+        return udpPort;
+    }
 
     public ArrayList<Connection> getConnections() { return connections; }
 
     public void setName(String name) { this.name = name; }
 
-    public void setPort(int port) { this.port = port; }
+    public void setUdpPort(int port) {
+        this.udpPort = port;
+    }
 
     public void setConnections(ArrayList<Connection> connections) { this.connections = connections; }
 
@@ -64,13 +74,15 @@ public class StationNeighbour {
 
     }
 
-    public void fromString(String serverString) { //String is 1 route and a server name
-        String[] splitServerString = serverString.split(",");
-        this.name = splitServerString[4];
-        Connection newConnection = new Connection();
-        newConnection.populateFromString(serverString);
-        connections.add(newConnection);
-    }
+    //DEAD METHPDS
+
+//    public void fromString(String serverString) { //String is 1 route and a server name
+//        String[] splitServerString = serverString.split(",");
+//        this.name = splitServerString[4];
+//        Connection newConnection = new Connection();
+//        newConnection.populateFromString(serverString);
+//        connections.add(newConnection);
+//    }
 
 
 }

@@ -17,10 +17,10 @@ public class PersistentServerData {
     private int myTcpPort;
     private int myUdpPort;
     private ArrayList<Integer> neighbourPorts;
-    private HashMap<String, Integer> neighbourNamePorts;
+    private HashMap<String, Integer> neighbourNamePorts; //Not  changed if there is a change with the file
 
     //Info that may change
-    private HashMap<String, StationNeighbour> neighbours;
+    private HashMap<String, StationNeighbour> neighbours; //fully recreaated if there is a change with file
 
 
     public PersistentServerData(String myFileName, String stationName, int myTcpPort, int myUdpPort, ArrayList<Integer> neighbourPorts) {
@@ -39,44 +39,6 @@ public class PersistentServerData {
         return neighbours.get(neighbourName);
     }
 
-
-
-    public void updateNeighbourNamePort(String name, int port) {
-        if (neighbours.get(name) == null) {
-            System.out.println("Not my neighbour");
-            return;
-        } //Do nothing if its not your neighbour
-        neighbourNamePorts.put(name, port);
-        StationNeighbour neighbour = neighbours.get(name);
-        for (Connection connection : neighbour.getConnections()) {
-            connection.setArrivalPort(port);
-        }
-        neighbour.setPort(port);
-    }
-
-    public List<String> getNamesWithoutPorts() {
-        List<String> neighboursWithoutPorts = new ArrayList<>();
-        for (String neighbour : neighbours.keySet()) {
-            if (neighbourNamePorts.get(neighbour) == null) {
-                neighboursWithoutPorts.add(neighbour);
-            }
-        }
-        return neighboursWithoutPorts;
-    }
-
-    public List<Integer> getPortsWithoutNames() {
-
-
-        List<Integer> portsWithoutNames = new ArrayList<>();
-        for (Integer port : neighbourPorts) {
-            if (!neighbourNamePorts.values().contains(port)) {
-                portsWithoutNames.add(port);
-            }
-        }
-        return portsWithoutNames;
-    }
-
-
     public void updateFileContents() {
         long lastModified = myFile.lastModified();
         if (lastModified > lastRead) {
@@ -87,10 +49,6 @@ public class PersistentServerData {
         }
     }
 
-    public void addNeighbourNamePort(String name, int port) {
-        neighbourNamePorts.put(name, port);
-        neighbours.get(name).setPort(port);
-    }
 
     public void readMyFile() {
         try {
@@ -106,26 +64,36 @@ public class PersistentServerData {
             }
             while ((nextLine = reader.readLine()) != null) {
                 words = nextLine.split(",");
-                String neighbourName = words[4];
+
 
                 Connection newConnection = new Connection();
+                //,depName,depStopName,vehicleName,arrPort,arrName,depTime,arrTime
                 newConnection.setDepartureName(stationName);
                 newConnection.setDeparturePort(myUdpPort);
-                newConnection.populateFromString(nextLine);
+
+                //05:15,Line1,PlatformB,06:10,West_Station
+                newConnection.setDepartureTime(new Time(words[0]));
+                newConnection.setVehicleName(words[1]);
+                newConnection.setDepartureStopName(words[2]);
+                newConnection.setArrivalTime(new Time(words[3]));
+                newConnection.setArrivalName(words[4]);
+
+
+                String neighbourName = words[4];
 
                 if (!neighbours.containsKey(neighbourName)) { //A)neighbour does not exist
-                    StationNeighbour neighbour = new StationNeighbour(neighbourName, 0);
-                    newConnection.setArrivalPort(0);
+                    StationNeighbour neighbour = new StationNeighbour(neighbourName);
                     if (neighbourNamePorts.get(neighbourName) != null) {
-                        neighbour.setPort(neighbourNamePorts.get(neighbourName));
-                        newConnection.setArrivalPort(neighbourNamePorts.get(neighbourName));
+                        int neighbourUdpPort = neighbourNamePorts.get(neighbourName);
+                        neighbour.setUdpPort(neighbourUdpPort);
+                        newConnection.setArrivalPort(neighbourUdpPort);
                     }
                     neighbour.addConnection(newConnection);
 
                     neighbours.put(neighbourName, neighbour);
                 } else { //Neighbour already exist
                     StationNeighbour neighbour = neighbours.get(neighbourName);
-                    newConnection.setArrivalPort(neighbour.getPort());
+                    newConnection.setArrivalPort(neighbour.getUdpPort());
                     neighbour.addConnection(newConnection);
                 }
             }
@@ -134,6 +102,35 @@ public class PersistentServerData {
             System.exit(1);
         }
     }
+
+
+    public void updateNeighbourNamePort(String name, int neighbourUdpPort) {
+        if (neighbours.get(name) == null) {
+            System.out.println("Not my neighbour");
+            return;
+        } //Do nothing if its not your neighbour
+        neighbourNamePorts.put(name, neighbourUdpPort);
+        StationNeighbour neighbour = neighbours.get(name);
+        neighbour.setUdpPort(neighbourUdpPort);
+        for (Connection connection : neighbour.getConnections()) {
+            connection.setArrivalPort(neighbourUdpPort);
+        }
+
+    }
+
+    public List<Integer> getPortsWithoutNames() {
+        List<Integer> portsWithoutNames = new ArrayList<>();
+        for (Integer port : neighbourPorts) {
+            if (!neighbourNamePorts.values().contains(port)) {
+                portsWithoutNames.add(port);
+            }
+        }
+        return portsWithoutNames;
+    }
+
+
+
+
 
     public int getMyTcpPort() {
         return myTcpPort;
@@ -170,4 +167,26 @@ public class PersistentServerData {
     public HashMap<String, StationNeighbour> getNeighbours() {
         return neighbours;
     }
+
+    //    public List<String> getNamesWithoutPorts2() {
+//        List<String> neighboursWithoutPorts = new ArrayList<>();
+//        for (String neighbour : neighbours.keySet()) {
+//            if (neighbourNamePorts.get(neighbour) == null) {
+//                neighboursWithoutPorts.add(neighbour);
+//            }
+//        }
+//        return neighboursWithoutPorts;
+//    }
+
+    //    public void addNeighbourNamePort(String name, int port) {
+//        neighbourNamePorts.put(name, port);
+//        neighbours.get(name).setUdpPort(port);
+//    }
+
+    //
+
+
+    //////////////////////////////////DEAD METHODs
+
+
 }

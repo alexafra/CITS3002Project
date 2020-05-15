@@ -12,12 +12,16 @@ public class Router {
 
 
     /**
-     * Should return request line method, location, first key-value pair, fragment, protocol, packetNo
+     * Should return request line method, location, first key-value pair, protocol, packetNo
      * @param httpRequestLine
      * @return
+     * Possible Requests:
+     * GET / ALEX/1.0 packetNo - 2^12 = 4096
+     * GET /?to=dest ALEX/1.0 packetNo - 2^12 = 4096
+     * GET / http/1.1
      */
     public static String[] parseRequestLine(String httpRequestLine) {
-        String[] requestLineInfo = {"", "", "", "", "", "", ""};
+        String[] requestLineInfo = {"", "", "", "", "", ""};
 
         String[] requestParser = httpRequestLine.split(" ");
 
@@ -34,35 +38,22 @@ public class Router {
 
             String queryString;
             String[] keyValuePair;
-            String key;
-            String value;
-            String fragment;
+            String key = "";
+            String value = "";
 
             if (urlParser.length > 1) {
                 queryString = urlParser[1];
                 keyValuePair = queryString.split("=");
                 key = keyValuePair[0];
                 value = keyValuePair[1];
-            } else {
-                key = "";
-                value = "";
-            }
-
-            String[] locationParser = location.split("#");
-            if (locationParser.length == 2) {
-                location = locationParser[0];
-                fragment = locationParser[1];
-            } else {
-                fragment = "";
             }
 
             requestLineInfo[0] = method;
             requestLineInfo[1] = location;
             requestLineInfo[2] = key;
             requestLineInfo[3] = value;
-            requestLineInfo[4] = fragment;
-            requestLineInfo[5] = protocol;
-            requestLineInfo[6] = packetNo;
+            requestLineInfo[4] = protocol;
+            requestLineInfo[5] = packetNo;
         }
 
         return requestLineInfo;
@@ -79,17 +70,20 @@ public class Router {
         String location = urlSummary[1];
         String key = urlSummary[2];
         String value = urlSummary[3];
-        String protocol = urlSummary[5];
+        String protocol = urlSummary[4];
 
         boolean requestHasKeyValuePair = key != null && key.equals("to") && value != null && !value.equals("");
 
         if (protocol.equals("ALEX/1.0")) {
-            int packetNo = Integer.parseInt(urlSummary[6]);
+            int packetNo = Integer.parseInt(urlSummary[5]);
             if (location.equals("/")) { //Station controller
                 if (method.equals("GET")) { //Get method - TCP
                     if (requestHasKeyValuePair) { //single key-value
-                        controller.getUdp(key, value, packetNo); //Not yet implemented
+                        controller.getUdp(value, packetNo); //Not yet implemented
+                    } else {
+                        controller.getNameUdp(packetNo);
                     }
+
                 }
             }
             //Alex routing
@@ -100,7 +94,6 @@ public class Router {
                         controller.getHttp(value); //providing destination arguments
                     }
                 }
-                return response;
             }
         }
 

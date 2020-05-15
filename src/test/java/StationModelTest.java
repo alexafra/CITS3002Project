@@ -2,9 +2,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import java.util.HashMap;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class StationModelTest {
@@ -23,11 +20,11 @@ public class StationModelTest {
      */
     @BeforeEach
     public void init () {
-        model1 = new StationModel();
-
-        fileLocation = "/Users/alexanderfrazis/Desktop/UWAUnits/2020Sem1/CITS3002/NetworksJavaProject/src/test/serverFiles/";
-        model1.setMyName("Test_Terminal");
-        model1.setMyFile(fileLocation + "tt-Test_Terminal");
+//        model1 = new StationModel();
+//
+//        fileLocation = "/Users/alexanderfrazis/Desktop/UWAUnits/2020Sem1/CITS3002/NetworksJavaProject/src/test/serverFiles/";
+//        model1.setMyName("Test_Terminal");
+//        model1.setMyFile(fileLocation + "tt-Test_Terminal");
     }
 
     @AfterEach

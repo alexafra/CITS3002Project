@@ -151,10 +151,10 @@ public class Station {
                             inputBuf.clear(); //Clear ByteBuffer
 
 
-                            StationModel httpModel = new StationModel(datagramChannelKey, selector, this);
+                            StationModel httpModel = new StationModel(datagramChannelKey, selector, this, true);
                             StationView httpView = new StationView();
                             //Give controller ther Http Key
-                            StationController httpController = new StationController(httpModel, httpView, key, this);
+                            StationController httpController = new StationController(httpModel, httpView, key, this, true);
                             // controllerWaitingForResponse.
 
 
@@ -199,7 +199,7 @@ public class Station {
                             ByteBuffer inputDatagramData = ByteBuffer.allocate(DATAGRAM_BYTE_SIZE);
                             InetSocketAddress senderAddress = (InetSocketAddress) datagramChannel.receive(inputDatagramData);
                             inputDatagramPacket.setSocketAddress(senderAddress); //Set destination address for reply
-                            inputDatagramPacket.setData(inputDatagramData.array());
+                            inputDatagramPacket.setData(inputDatagramData.array());  //You have to pass this to the controller, probably also the model
 
                             //Convert datagram data to string
                             String datagramString = new String(inputDatagramPacket.getData()).trim();
@@ -227,9 +227,12 @@ public class Station {
                                 //Let existing model/view/controller deal with it
                             } else {
                                 //Create a new station/model/view
-                                StationModel udpModel = new StationModel(datagramChannelKey, selector, this);//key == datagramChannelKey
+                                int indexOfFirstLine = datagramBody.indexOf("\n") + 1;
+                                datagramBody = datagramBody.substring(indexOfFirstLine);
+                                String[] connectionsSoFar = datagramBody.split("\n");
+                                StationModel udpModel = new StationModel(datagramChannelKey, selector, this, false, senderAddress, connectionsSoFar);//key == datagramChannelKey
                                 StationView udpView = new StationView();
-                                StationController controller = new StationController(udpModel, udpView, datagramChannelKey, this); //View probs not necessary
+                                StationController controller = new StationController(udpModel, udpView, datagramChannelKey, this, false, senderAddress, connectionsSoFar); //View probs not necessary
                                 //Route the datagram to correct response depending based on datagrams first line
                                 Router router = new Router(controller);
                                 router.route(datagramHeader, datagramBody);

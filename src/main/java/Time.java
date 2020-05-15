@@ -12,6 +12,13 @@ public class Time {
         this.minute = minute;
     }
 
+    public Time(String stringTime) { //hh:mm
+        String[] hourMinuteString = stringTime.split("[:]");
+        this.hour = Integer.parseInt(hourMinuteString[0]);
+        this.minute = Integer.parseInt(hourMinuteString[1]);
+
+    }
+
     /**
      * Default constructor
      */
@@ -51,7 +58,7 @@ public class Time {
      * Sets hour and time based on a String
      * @param time in the format "hh:mm"
      */
-    public void populateFromString(String time) {
+    public void populateFromString2(String time) { //not really good method
         String[] hourMinuteString = time.split("[:]");
         this.hour = Integer.parseInt( hourMinuteString[0]);
         this.minute = Integer.parseInt( hourMinuteString[1]);
