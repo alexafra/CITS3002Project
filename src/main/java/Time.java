@@ -1,3 +1,5 @@
+import java.time.LocalTime;
+
 public class Time {
     private int hour;
     private int minute;
@@ -19,6 +21,13 @@ public class Time {
 
     }
 
+    public Time(LocalTime localTimeFormat) {
+        int hour = localTimeFormat.getHour();
+        int minute = localTimeFormat.getMinute();
+        this.hour = hour;
+        this.minute = minute;
+    }
+
     /**
      * Default constructor
      */
@@ -26,10 +35,10 @@ public class Time {
         this(0, 0);
     }
 
-
     public int getHour() {
         return hour;
     }
+
     public int getMinute() {
         return minute;
     }
@@ -37,6 +46,7 @@ public class Time {
     public void setHour(int hour) {
         this.hour = hour;
     }
+
     public void setMinute(int minute) { this.minute = minute; }
 
     /**
@@ -54,20 +64,9 @@ public class Time {
         return time;
     }
 
-    /**
-     * Sets hour and time based on a String
-     * @param time in the format "hh:mm"
-     */
-    public void populateFromString2(String time) { //not really good method
-        String[] hourMinuteString = time.split("[:]");
-        this.hour = Integer.parseInt( hourMinuteString[0]);
-        this.minute = Integer.parseInt( hourMinuteString[1]);
-    }
 
     public boolean isAfterOrEqualTo(Time other) {
-
         return (this.hour == other.getHour() && this.minute >= other.getMinute()) || this.hour > other.getHour();
-
     }
 
     /**

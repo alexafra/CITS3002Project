@@ -3,6 +3,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,22 +12,19 @@ public class StationModel {
     private static PersistentServerData persistentServerData; //should be able to update
     private SelectionKey datagramChannelKey; //should be able to send data
 
-    private HashMap<String, StationNeighbour> myNeighbours;
-
-
     private Station station;
     private boolean awaitingResponses;
     private ArrayList<Integer> awaitingPacketNumbers;
     private boolean isTcpModel;
     private InetSocketAddress udpSenderAddress;
-    private String[] connectionsSoFar;
+    private String[] datagramValues;
 
 
     private ArrayList<Connection> connections; //it really should just be this
     private String destinationName;
 
 
-    public StationModel(SelectionKey datagramChannelKey, Station station, boolean isTcpModel, InetSocketAddress udpSenderAddress, String[] connectionsSoFar) {
+    public StationModel(SelectionKey datagramChannelKey, Station station, boolean isTcpModel, InetSocketAddress udpSenderAddress, String[] datagramValues) {
         this.datagramChannelKey = datagramChannelKey;
 
         persistentServerData.updateFileContents();
@@ -37,7 +35,7 @@ public class StationModel {
         this.destinationName = "";
         this.isTcpModel = isTcpModel;
         this.udpSenderAddress = udpSenderAddress;
-        this.connectionsSoFar = connectionsSoFar;
+        this.datagramValues = datagramValues;
 
     }
 
@@ -100,15 +98,22 @@ public class StationModel {
             persistentServerData.updateNeighbourNamePort(name, port);
 
             if (!awaitingResponses) { //have all neighbour ports
+                //setConnections?
                 HashMap<String, StationNeighbour> neighboursToRequestConnection = this.getNeighbours();
                 if (!isTcpModel) {//udp controller
-                    for (String connection : connectionsSoFar) { //header and body are of current request not previous request that initially triggered
+                    for (String connection : datagramValues) { //header and body are of current request not previous request that initially triggered
                         String[] connectionValues = connection.split(",");
                         String departureName = connectionValues[0];
                         neighboursToRequestConnection.remove(departureName);
                     }
                 }
-                sendConnectionsUdpRequests(this.destinationName, new ArrayList<>(neighboursToRequestConnection.values()));
+                //Checks if this is responding to datagram
+                Time earliestDepartureTime = new Time(LocalTime.now());
+                if (datagramValues.length > 0 && datagramValues[0].split(",").length == 6) { //checks if this datagram is to build on another
+                    earliestDepartureTime = new Time(datagramValues[datagramValues.length - 1].split(",")[5]);
+                }
+
+                sendConnectionsUdpRequests(this.destinationName, new ArrayList<>(neighboursToRequestConnection.values()), earliestDepartureTime);
             }
         } else { //get a response to connections request
             if (header[3].equals("FOUND")) {
@@ -126,11 +131,9 @@ public class StationModel {
                             connections.add(new Connection(datagramData[i]));
                         }
                     }
-
                 }
             }
             this.awaitingResponses = !awaitingPacketNumbers.isEmpty();
-
         }
     }
 
@@ -143,10 +146,13 @@ public class StationModel {
         this.destinationName = destinationName;
 
         HashMap<String, StationNeighbour> neighbours = getNeighbours(); //Should only start this if this is alredy done
-
+        Time earliestDepartureTime = new Time(LocalTime.now());
+        if (datagramValues.length > 0 && datagramValues[0].split(",").length == 6) { //checks if this datagram is to build on another
+            earliestDepartureTime = new Time(datagramValues[datagramValues.length - 1].split(",")[5]);
+        }
         if (neighbours.containsKey(destinationName)) { //'Direct Route'
             StationNeighbour neighbour = neighbours.get(destinationName);
-            Connection connection = neighbour.getSoonestConnection(); ////!!!!!!!!!!!!!!!!!!WIll have to change to soonest time arrival
+            Connection connection = neighbour.getSoonestConnection(earliestDepartureTime); ////!!!!!!!!!!!!!!!!!!WIll have to change to soonest time arrival
             if (connection != null)
                 this.connections.add(connection);
         } else {
@@ -155,12 +161,14 @@ public class StationModel {
             if (!(portsWithoutNames.size() == 0)) {
                 sendPortNameUdpRequests(portsWithoutNames);
             } else {
-                sendConnectionsUdpRequests(destinationName, new ArrayList<>(neighbours.values()));
+                //Checks if this is responding to datagram
+
+                sendConnectionsUdpRequests(destinationName, new ArrayList<>(neighbours.values()), earliestDepartureTime);
             }
         }
     }
 
-    private void sendConnectionsUdpRequests(String destinationName, ArrayList<StationNeighbour> neighbours) {
+    private void sendConnectionsUdpRequests(String destinationName, ArrayList<StationNeighbour> neighbours, Time earliestDepartureTime) {
         try {
             for (StationNeighbour neighbour : neighbours) {
                 int packetNo = station.getPacketCount();
@@ -168,8 +176,8 @@ public class StationModel {
                 station.incrementPacketCount();
 
                 int neighbourPort = neighbour.getUdpPort();
-                Connection soonestConnectionToNeighbour = neighbour.getSoonestConnection();
-                String requestString = UdpPacketConstructor.getConnections(packetNo, destinationName, soonestConnectionToNeighbour, connectionsSoFar);
+                Connection soonestConnectionToNeighbour = neighbour.getSoonestConnection(earliestDepartureTime);
+                String requestString = UdpPacketConstructor.getConnections(packetNo, destinationName, soonestConnectionToNeighbour, datagramValues);
                 ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
                 InetSocketAddress destination = new InetSocketAddress("127.0.0.1", neighbourPort);
                 DatagramChannel channel = (DatagramChannel) datagramChannelKey.channel();

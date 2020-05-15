@@ -18,41 +18,20 @@ public class StationNeighbour {
         this(name, -1, new ArrayList<>());
     }
 
-    //Dead
-//    public StationNeighbour() {
-//        this("", -1, new ArrayList<>());
-//    }
-
-//    public StationNeighbour(String name, int port) {
-//        this(name, port, new ArrayList<>());
-//    }
-
-    public String getName() { return name; }
-
     public int getUdpPort() {
         return udpPort;
     }
-
-    public ArrayList<Connection> getConnections() { return connections; }
-
-    public void setName(String name) { this.name = name; }
 
     public void setUdpPort(int port) {
         this.udpPort = port;
     }
 
-    public void setConnections(ArrayList<Connection> connections) { this.connections = connections; }
-
     public void addConnection(Connection connection) { this.connections.add(connection); }
 
-    public void removeConnection(Connection connection) { this.connections.remove(connection); }
+//    public void removeConnection(Connection connection) { this.connections.remove(connection); }
 
     public Connection getSoonestConnection() {
-        LocalTime currentTime = LocalTime.now();
-        int localHour = currentTime.getHour();
-        int localMinute = currentTime.getMinute();
-        Time earliestDepartureTime = new Time(localHour, localMinute);
-        return getSoonestConnection(earliestDepartureTime);
+        return getSoonestConnection(new Time(LocalTime.now()));
     }
 
     public Connection getSoonestConnection(Time earliestDepartureTime) {
@@ -83,6 +62,21 @@ public class StationNeighbour {
 //        newConnection.populateFromString(serverString);
 //        connections.add(newConnection);
 //    }
+//    public ArrayList<Connection> getConnections() { return connections; }
+
+//    public void setName(String name) { this.name = name; }
 
 
+//    public void setConnections(ArrayList<Connection> connections) { this.connections = connections; }
+
+    //Dead
+//    public StationNeighbour() {
+//        this("", -1, new ArrayList<>());
+//    }
+
+//    public StationNeighbour(String name, int port) {
+//        this(name, port, new ArrayList<>());
+//    }
+
+//    public String getName() { return name; }
 }
