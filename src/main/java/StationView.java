@@ -10,6 +10,103 @@ public class StationView {
 
     public String getStationView() { return stationView; }
 
+
+    public String displayConnections(String myName, String destinatipn, ArrayList<Connection> connections) {
+        String response = "";
+        String responseHeader = goodHeader();
+        String responseBody = bodyDisplayConnections(myName, destinatipn, connections);
+        response = response + responseHeader + "\n" + responseBody;
+        stationView = response;
+        return response;
+    }
+
+    public String bodyDisplayConnections(String myName, String destination, ArrayList<Connection> connections) {
+        String header = "The suggested route from your location: " + myName + " to your destination: " + destination + " is:";
+        String connectionsString = "";
+        for (int i = 0; i < connections.size(); i++) {
+            Connection connection = connections.get(i);
+            String vehicleType;
+            if (connection.getVehicleName().matches("\\d+")) {
+                vehicleType = "bus ";
+            } else {
+                vehicleType = "train ";
+            }
+            connectionsString = "Take the " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
+            connectionsString = connectionsString + " At " + connection.getDepartureName() + " to " + connection.getArrivalName() + " Departure Time: ";
+            connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: " + connection.getArrivalTime() + "\n";
+        }
+
+        String body = "";
+        body = body + "<html>\n";
+        body = body + "<body>\n";
+        body = body + "<h1>" + header + "</h1>\n";
+        body = body + "<p>" + connectionsString + "</p>\n";
+        body = body + "</body>\n";
+        body = body + "</html>\n";
+        return body;
+    }
+
+
+    public String displayArrivalIsDeparture(String myName) {
+        String response = "";
+        String responseHeader = goodHeader();
+        String responseBody = bodyDisplayArrivalIsDeparture(myName);
+        response = response + responseHeader + "\n" + responseBody;
+        stationView = response;
+        return response;
+    }
+
+    public String bodyDisplayArrivalIsDeparture(String myName) {
+        String body = "";
+        body = body + "<html>\n";
+        body = body + "<body>\n";
+        body = body + "<h1>Your arrival location: " + myName + "is your departure location" + "</h1>\n";
+        body = body + "</body>\n";
+        body = body + "</html>\n";
+        return body;
+    }
+
+
+    public String displayNoConnectionAvailable(String myName, String neighbour) {
+        String response = "";
+        String responseHeader = goodHeader();
+        String responseBody = bodyDisplayNoConnectionAvailable(myName, neighbour);
+        response = response + responseHeader + "\n" + responseBody;
+        stationView = response;
+        return response;
+    }
+
+    public String bodyDisplayNoConnectionAvailable(String myName, String neighbour) {
+        String body = "";
+        body = body + "<html>\n";
+        body = body + "<body>\n";
+        body = body + "<h1>There is no known route from: " + myName + " to your destination: " + neighbour + "</h1>\n";
+        body = body + "</body>\n";
+        body = body + "</html>\n";
+        return body;
+    }
+
+    public void badRequestResponse() { stationView = badHeader(); }
+
+    public String badHeader() {
+        String header = "";
+        header = header + "HTTP/1.1 400 BAD\n";
+        header = header + "Content-Type: text/html\n";
+        header = header + "Connection: Closed\n";
+        return header;
+    }
+
+    public String goodHeader() {
+        String header = "";
+        header = header + "HTTP/1.1 200 OK\n";
+        header = header + "Content-Type: text/html\n";
+        header = header + "Connection: Closed\n";
+        return header;
+    }
+
+
+    //DEAD METHODS ..... hmmm not quite
+
     public String displayWholeStation(String myName, int myPort, String myFileName, ArrayList<StationNeighbour> neighbours) {
         String response = "";
         String responseHeader = goodHeader();
@@ -39,99 +136,4 @@ public class StationView {
         body = body + "</html>\n";
         return body;
     }
-
-    public String displayConnections(String myName, int myPort, String neighbour, int portDestination, ArrayList<Connection> connections) {
-        String response = "";
-        String responseHeader = goodHeader();
-        String responseBody = bodyDisplayConnections(myName, myPort, neighbour, portDestination, connections);
-        response = response + responseHeader + "\n" + responseBody;
-        stationView = response;
-        return response;
-    }
-
-    public String displayArrivalIsDeparture(String myName, int myPort) {
-        String response = "";
-        String responseHeader = goodHeader();
-        String responseBody = bodyDisplayArrivalIsDeparture(myName, myPort);
-        response = response + responseHeader + "\n" + responseBody;
-        stationView = response;
-        return response;
-    }
-
-    public String bodyDisplayArrivalIsDeparture(String myName, int myPort) {
-        String body = "";
-        body = body + "<html>\n";
-        body = body + "<body>\n";
-        body = body + "<h1>Your arrival location: " + myName + "Port: " + myPort + "is your departure location" + "</h1>\n";
-        body = body + "</body>\n";
-        body = body + "</html>\n";
-        return body;
-    }
-
-
-    public String bodyDisplayConnections(String myName, int myPort, String neighbour, int portDestination, ArrayList<Connection> connections) {
-        String header = "The suggested route from your location: " + myName + " port: " + myPort + " to your destination: " + neighbour + " port: " + portDestination + " is:";
-        String connectionsString = "";
-        for (int i = 0; i < connections.size(); i ++) {
-            Connection connection = connections.get(i);
-            String vehicleType;
-            if (connection.getVehicleName().matches("\\d+")) {
-                vehicleType = "bus";
-            } else {
-                vehicleType = "train";
-            }
-            connectionsString = "Take the " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
-            connectionsString = connectionsString + " At " + myName + " to " + neighbour + " Departure Time: ";
-            connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: ";
-            connectionsString = connectionsString + connection.getArrivalTime() + "\n";
-        }
-
-        String body = "";
-        body = body + "<html>\n";
-        body = body + "<body>\n";
-        body = body + "<h1>" + header + "</h1>\n";
-        body = body + "<p>" + connectionsString +"</p>\n";
-        body = body + "</body>\n";
-        body = body + "</html>\n";
-        return body;
-    }
-
-    public String displayNoConnectionAvailable(String myName, int myPort, String neighbour) {
-        String response = "";
-        String responseHeader = goodHeader();
-        String responseBody = bodyDisplayNoConnectionAvailable(myName, myPort, neighbour);
-        response = response + responseHeader + "\n" + responseBody;
-        stationView = response;
-        return response;
-    }
-
-    public String bodyDisplayNoConnectionAvailable(String myName, int myPort, String neighbour) {
-        String body = "";
-        body = body + "<html>\n";
-        body = body + "<body>\n";
-        body = body + "<h1>There is no known route from: " + myName + " port: " + myPort + " to your destination: " + neighbour + "</h1>\n";
-        body = body + "</body>\n";
-        body = body + "</html>\n";
-        return body;
-    }
-
-    public void badRequestResponse() { stationView = badHeader(); }
-
-    public String badHeader() {
-        String header = "";
-        header = header + "HTTP/1.1 400 BAD\n";
-        header = header + "Content-Type: text/html\n";
-        header = header + "Connection: Closed\n";
-        return header;
-    }
-
-    public String goodHeader() {
-        String header = "";
-        header = header + "HTTP/1.1 200 OK\n";
-        header = header + "Content-Type: text/html\n";
-        header = header + "Connection: Closed\n";
-        return header;
-    }
-
-
 }

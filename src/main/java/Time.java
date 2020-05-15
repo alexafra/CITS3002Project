@@ -57,6 +57,12 @@ public class Time {
         this.minute = Integer.parseInt( hourMinuteString[1]);
     }
 
+    public boolean isAfterOrEqualTo(Time other) {
+
+        return (this.hour == other.getHour() && this.minute >= other.getMinute()) || this.hour > other.getHour();
+
+    }
+
     /**
      * tests if two Time objects are equal
      * @param timeOther is another Time object

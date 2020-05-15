@@ -35,6 +35,12 @@ public class PersistentServerData {
         this.neighbourPorts = neighbourPorts;
     }
 
+    public StationNeighbour getNeighbour(String neighbourName) {
+        return neighbours.get(neighbourName);
+    }
+
+
+
     public void updateNeighbourNamePort(String name, int port) {
         if (neighbours.get(name) == null) {
             System.out.println("Not my neighbour");

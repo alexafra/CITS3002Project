@@ -11,15 +11,14 @@ public class StationController {
     private StationModel model;
     private StationView view;
     private SelectionKey key; //could be either http or udp key
-    private String methodAwaitingResponse; //only a single method can be awaiting a response
-    private Station station;
+    private Station station; //Does a controller own this key?
+    private boolean respondingToTcp;
 
     public StationController(StationModel model, StationView view, SelectionKey key, Station station) {
         this.model = model;
         this.view = view;
         this.key = key;
         this.station = station;
-        this.methodAwaitingResponse = "";
     }
 
     private void executeWriteHttp(String httpResponse) {
@@ -30,6 +29,99 @@ public class StationController {
         key.interestOps(SelectionKey.OP_WRITE);
 
     }
+
+
+    /**
+     * get method is called on base with a single key-value pairs
+     * should return the connections required to get to destination station
+     *
+     */
+    public void getHttp(String destination) {
+        String myName = model.getMyName();
+        if (destination.equals(myName)) {
+            String response = view.displayArrivalIsDeparture(myName);
+            executeWriteHttp(response);
+        }
+        if (model.isNeighbour(destination)) {
+            ArrayList<Connection> connections = model.getConnections(destination); //earliest destination
+            String response = view.displayConnections(myName, destination, connections);
+            executeWriteHttp(response);
+
+        } else {
+            model.getConnections(destination);
+            ArrayList<Integer> awaitingPacketNumbers = model.getAwaitingPacketNumbers();
+            for (Integer packetNo : awaitingPacketNumbers) {
+                station.addControllerAwaitingResponse(packetNo, this);
+            }
+        }
+    }
+
+    //Execute if the model has the correct connections
+    private void executeGetHttp(String destination) {
+        String myName = model.getMyName();
+        int myPort = model.getMyUdpPort();
+
+        ArrayList<Connection> connections = model.getConnections(destination);
+
+        String response = "";
+        if (destination.equals(model.getMyName())) {
+            response = view.displayArrivalIsDeparture(model.getMyName());
+        } else if (connections.isEmpty()) {
+            response = view.displayNoConnectionAvailable(myName, destination); //havent thought about this structure
+        } else {
+            int destinationPort = connections.get(connections.size() - 1).getArrivalPort();
+            response = view.displayConnections(myName, destination, connections);
+        }
+        executeWriteUdp(response);
+    }
+
+
+    public void receiveResponse(String[] header, String body) {
+        int packetNo = Integer.parseInt(header[3]);
+        station.removeControllerAwaitingResponse(packetNo);
+        model.receiveResponse(header, body);
+
+        if (!model.isAwaitingResponses()) {
+            if (respondingToTcp) {
+                executeGetHttp();
+            } else {
+                executeGetUdp();
+            }
+            //Not quite right
+            //Do something
+        } // else Do nothing
+        //}
+    }
+
+    public void executeGetUdp() {
+
+    }
+
+
+    private void executeWriteUdp(String udpResponse) {
+        byte[] outBytes = udpResponse.getBytes(StandardCharsets.UTF_8);
+        DatagramPacket outputDatagramPacket = (DatagramPacket) key.attachment();
+        //Set datagramPacket data response
+        outputDatagramPacket.setData(outBytes);
+        //Sender address already set
+
+        key.interestOps(SelectionKey.OP_WRITE);
+
+    }
+
+//    String datagramResponse = router.route(datagramHeader, datagramBody);
+
+
+    /**
+     * get method is called on base with no key-value pairs
+     * should return all timetable information associated with station
+     */
+    public void getUdp(String key, String destination, int packetNo) {
+        return;
+    }
+
+
+    // ALL DEAD METHODS
 
     private void executeGetHttp() {
         String myName = model.getMyName(); //model should update
@@ -62,51 +154,8 @@ public class StationController {
 
 
     /**
-     * get method is called on base with a single key-value pairs
-     * should return the connections required to get to destination station
-     *
-     */
-    public void getHttp(String destination) {
-        if (!destination.equals(model.getMyName())) {
-            model.getConnections(destination);
-        }
-        if (!model.isAwaitingResponses()) {
-            executeGetHttp(destination);
-        } else {
-            ArrayList<Integer> awaitingPacketNumbers = model.getAwaitingPacketNumbers();
-            for (Integer packetNo : awaitingPacketNumbers) {
-                station.addControllerAwaitingResponse(packetNo, this);
-            }
-            methodAwaitingResponse = "getHttp(key,value)";
-        }
-    }
-
-    //Execute if the model has the correct connections
-    private void executeGetHttp(String destination) {
-        String myName = model.getMyName();
-        int myPort = model.getMyUdpPort();
-
-        ArrayList<Connection> connections = model.getConnections(destination);
-
-        String response = "";
-        if (destination.equals(model.getMyName())) {
-            response = view.displayArrivalIsDeparture(model.getMyName(), myPort);
-        } else if (connections.isEmpty()) {
-            response = view.displayNoConnectionAvailable(myName, myPort, destination);
-        } else {
-            int destinationPort = connections.get(connections.size() - 1).getArrivalPort();
-            response = view.displayConnections(myName, myPort, destination, destinationPort, connections);
-        }
-        executeWriteUdp(response);
-    }
-
-
-
-
-    /**
      * getName method is called on base for the UDP protocol
      * should return the Station name, model should never not be ready because its in PersistentServerData from start
-     *
      */
     public void getNameUdp(int packetNo) {
         if (!model.isAwaitingResponses()) {
@@ -119,42 +168,6 @@ public class StationController {
         int myUdpPort = model.getMyUdpPort();
         String udpResponse = UdpPacketConstructor.sendPortName(packetNo, myName, myUdpPort);
         executeWriteUdp(udpResponse);
-    }
-
-    private void executeWriteUdp(String udpResponse) {
-        byte[] outBytes = udpResponse.getBytes(StandardCharsets.UTF_8);
-        DatagramPacket outputDatagramPacket = (DatagramPacket) key.attachment();
-        //Set datagramPacket data response
-        outputDatagramPacket.setData(outBytes);
-        //Sender address already set
-
-        key.interestOps(SelectionKey.OP_WRITE);
-
-    }
-
-//    String datagramResponse = router.route(datagramHeader, datagramBody);
-
-    public void receiveResponse(String[] header, String body) {
-        int packetNo = Integer.parseInt(header[3]);
-        station.removeControllerAwaitingResponse(packetNo);
-        model.receiveResponse(header, body, methodAwaitingResponse);
-
-        if (!model.isAwaitingResponses()) {
-            if (methodAwaitingResponse.equals("getHttp()")) {
-                executeGetHttp();
-            } else if (methodAwaitingResponse.equals("getHttp(key,value)")) {
-                //Do something
-            }
-        } // else Do nothing
-        //}
-    }
-
-    /**
-     * get method is called on base with no key-value pairs
-     * should return all timetable information associated with station
-     */
-    public void getUdp(String key, String destination, int packetNo) {
-        return;
     }
 
 

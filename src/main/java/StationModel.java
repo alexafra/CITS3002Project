@@ -9,38 +9,38 @@ import java.util.HashMap;
 import java.util.List;
 
 public class StationModel {
-    private static PersistentServerData fileContents;
+    private static PersistentServerData persistentServerData; //should be able to update
+    private SelectionKey datagramChannelKey; //should be able to send data
+    private Selector selector;
     private static final int DATAGRAM_BYTE_SIZE = 128;
-
-    private String myName;
-    private String myFile;
-    private int myPort;
 
     private HashMap<String, StationNeighbour> myNeighbours;
 
-    private SelectionKey datagramChannelKey;
-    private Selector selector;
+
     private Station station;
     private boolean awaitingResponses;
     private ArrayList<Integer> awaitingPacketNumbers;
-    private ArrayList<Connection> connections;
+
+
+    private ArrayList<Connection> connections; //it really should just be this
 
 
     public StationModel(SelectionKey datagramChannelKey, Selector selector, Station station) {
         this.datagramChannelKey = datagramChannelKey;
         this.selector = selector;
-        fileContents.updateFileContents();
+
+        persistentServerData.updateFileContents();
         this.station = station;
         this.awaitingPacketNumbers = new ArrayList<>();
         this.awaitingResponses = false;
         this.connections = new ArrayList<>();
     }
-    public StationModel() {
-        this(null, null, null);
-    }
+//    public StationModel() {
+//        this(null, null, null);
+//    }
 
-    public static void setFileContents(PersistentServerData fileContents) {
-        StationModel.fileContents = fileContents;
+    public static void setFileContents(PersistentServerData persistentServerData) {
+        StationModel.persistentServerData = persistentServerData;
     }
 
     public boolean isAwaitingResponses() {
@@ -48,13 +48,11 @@ public class StationModel {
     }
 
 
-
-
-    public void setMyName(String myName) { this.myName = myName; }
-
-    public void setMyFile(String myFile) { this.myFile = myFile; }
-
-    public void setMyPort(int myPort) { this.myPort = myPort; }
+//    public void setMyName(String myName) { this.myName = myName; }
+//
+//    public void setMyFile(String myFile) { this.myFile = myFile; }
+//
+//    public void setMyPort(int myPort) { this.myPort = myPort; }
 
     public ArrayList<Integer> getAwaitingPacketNumbers() {
         return awaitingPacketNumbers;
@@ -62,14 +60,16 @@ public class StationModel {
 
 
     public int getMyUdpPort() {
-        return fileContents.getMyUdpPort();
+        return persistentServerData.getMyUdpPort();
     }
 
     public String getMyFileName() {
-        return fileContents.getMyFileName();
+        return persistentServerData.getMyFileName();
     }
 
-    public String getMyName() { return fileContents.getMyName(); }
+    public String getMyName() {
+        return persistentServerData.getMyName();
+    }
 
     private void receiveMissingNeighbourPort() {
 
@@ -77,6 +77,10 @@ public class StationModel {
 
     private void receiveConnections() {
 
+    }
+
+    public boolean isNeighbour(String destination) {
+        return persistentServerData.getNeighbour(destination) != null;
     }
 
     //Different headers?
@@ -116,7 +120,7 @@ public class StationModel {
     //It needs to wait for a response and read the response
 
     public HashMap<String, StationNeighbour> getNeighbours() {
-        List<Integer> portsWithoutNames = fileContents.getPortsWithoutNames();
+        List<Integer> portsWithoutNames = persistentServerData.getPortsWithoutNames();
 
         for (Integer portWithoutName : portsWithoutNames) {
             try {
@@ -135,12 +139,15 @@ public class StationModel {
                 System.exit(1);
             }
         }
-        return fileContents.getNeighbours();
+        return persistentServerData.getNeighbours();
     }
 
+    private Connection getSoonestDepartureConnection(ArrayList<Connection> connections)
+
+}
 
     public ArrayList<Connection> getConnections(String destinationName) {
-        if (destinationName.equals(fileContents.getMyName())) return new ArrayList<>();
+        if (destinationName.equals(persistentServerData.getMyName())) return new ArrayList<>();
 
         HashMap<String, StationNeighbour> neighbours = getNeighbours(); //Should only start this if this is alredy done
 
@@ -148,7 +155,7 @@ public class StationModel {
         if (neighbours.containsKey(destinationName)) { //'Direct Route'
 
             StationNeighbour neighbour = neighbours.get(destinationName);
-            Connection connection = neighbour.getConnections().get(0); ////!!!!!!!!!!!!!!!!!!WIll have to change to soonest time arrival
+            Connection connection = neighbour.getSoonestConnection(); ////!!!!!!!!!!!!!!!!!!WIll have to change to soonest time arrival
 
             this.connections.add(connection);
         }
@@ -180,7 +187,7 @@ public class StationModel {
     }
 
     public void setNamePort(String name, int port) {
-        fileContents.updateNeighbourNamePort(name, port);
+        persistentServerData.updateNeighbourNamePort(name, port);
     }
 
 }

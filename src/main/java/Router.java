@@ -79,7 +79,6 @@ public class Router {
         String location = urlSummary[1];
         String key = urlSummary[2];
         String value = urlSummary[3];
-        String fragment = urlSummary[4];
         String protocol = urlSummary[5];
 
         boolean requestHasKeyValuePair = key != null && key.equals("to") && value != null && !value.equals("");
@@ -90,9 +89,6 @@ public class Router {
                 if (method.equals("GET")) { //Get method - TCP
                     if (requestHasKeyValuePair) { //single key-value
                         controller.getUdp(key, value, packetNo); //Not yet implemented
-
-                    } else if (fragment.equals("name")) { //UDP Name Request
-                        controller.getNameUdp(packetNo); //implemented
                     }
                 }
             }
@@ -102,8 +98,6 @@ public class Router {
                 if (method.equals("GET")) { //Get method - TCP
                     if (requestHasKeyValuePair) { //single key-value
                         controller.getHttp(value); //providing destination arguments
-                    } else { //no key-valuev //General GET method - TCP
-                        controller.getHttp(); //Providing general info
                     }
                 }
                 return response;
