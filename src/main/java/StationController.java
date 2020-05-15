@@ -109,12 +109,16 @@ public class StationController {
      * If you are a udp controller, send ud[ response to whoever sent initial request to you
      *
      * @param header
-     * @param body
+     * @param datagramData
      */
-    public void receiveResponse(String[] header, String body) {
-        int packetNo = Integer.parseInt(header[3]);
+    public void receiveResponse(String[] header, String[] datagramData) {
+        int packetNo = Integer.parseInt(header[4]);
         station.removeControllerAwaitingResponse(packetNo);
-        model.receiveResponse(header, body);
+        model.receiveResponse(header, datagramData);
+        ArrayList<Integer> awaitingPacketNumbers = model.getAwaitingPacketNumbers();
+        for (Integer packetNumber : awaitingPacketNumbers) {
+            station.addControllerAwaitingResponse(packetNumber, this);
+        }
 
 //        "RESPONSE name ALEX/1.0 " + packetNo, only gets called in sequence with bellow
 //          Only happen
@@ -166,57 +170,3 @@ public class StationController {
     }
 }
 
-//    String datagramResponse = router.route(datagramHeader, datagramBody);
-
-
-
-
-    // ALL DEAD METHODS
-
-//    private void executeGetHttp() {
-//        String myName = model.getMyName(); //model should update
-//        int myPort = model.getMyUdpPort();
-//        String myFileName = model.getMyFileName();
-//        ArrayList<StationNeighbour> neighbours = new ArrayList<>(model.getNeighbours().values());
-//
-//        String httpResponse = view.displayWholeStation(myName, myPort, myFileName, neighbours);
-//        executeWriteHttp(httpResponse);
-//    }
-
-
-//    //Execute if the model has the correct connections
-//    private void executeGetHttp(String destination) {
-//        String myName = model.getMyName();
-//
-//        ArrayList<Connection> connections = model.getConnections();
-//
-//        String response = "";
-//        if (destination.equals(model.getMyName())) {
-//            response = view.displayArrivalIsDeparture(model.getMyName());
-//        } else if (connections.isEmpty()) {
-//            response = view.displayNoConnectionAvailable(myName, destination); //havent thought about this structure
-//        } else {
-//            int destinationPort = connections.get(connections.size() - 1).getArrivalPort();
-//            response = view.displayConnections(myName, destination, connections);
-//        }
-//        executeWriteUdp(response);
-//    }
-
-//    /**
-//     * get method is called on base with no key-value pairs
-//     * should return all timetable information associated with station
-//     */
-//    public void getHttp() {
-//
-////        HashMap<String, StationNeighbour> neighboursMap = model.getNeighbours();
-//        model.getNeighbours();
-//        if (!model.isAwaitingResponses()) {
-//            executeGetHttp();
-//        } else {
-//            ArrayList<Integer> awaitingPacketNumbers = model.getAwaitingPacketNumbers();
-//            for (Integer packetNo : awaitingPacketNumbers) {
-//                station.addControllerAwaitingResponse(packetNo, this);
-//            }
-//            methodAwaitingResponse = "getHttp()";
-//        }
-//    }

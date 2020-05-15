@@ -1,21 +1,16 @@
 public class Connection {
-    public static Connection NO_CONNECTION = new Connection(0, "", "", "", 0, "", new Time(), new Time());
     private String departureName;
-    //    private int departurePort;
-//    private int arrivalPort;
-    private Time departureTime;
-    private Time arrivalTime;
     private String vehicleName; //Line one bus 12
     private String arrivalName;
     private String departureStopName; //platform b or stopA
+    private Time departureTime;
+    private Time arrivalTime;
 
-    //depPort,depName,depStopName,vehicleName,depTime,arrTime,arrPort,arrName
-    public Connection(int departurePort, String departureName, String departureStopName, String vehicleName, int arrivalPort, String arrivalName, Time departureTime, Time arrivalTime) {
-//        this.departurePort = departurePort;
+    //depName,depStopName,vehicleName,arrName,depTime,arrTime
+    public Connection(String departureName, String departureStopName, String vehicleName, String arrivalName, Time departureTime, Time arrivalTime) {
         this.departureName = departureName;
         this.departureStopName = departureStopName;
         this.vehicleName = vehicleName;
-//        this.arrivalPort = arrivalPort;
         this.arrivalName = arrivalName;
         this.departureTime = departureTime;
         this.arrivalTime = arrivalTime;
@@ -23,22 +18,22 @@ public class Connection {
 
     }
 
+    //depName,depStopName,vehicleName,arrName,depTime,arrTime
     public Connection(String connectionString) {
         String[] connectionStringSplit = connectionString.split(",");
 
-//        this.departurePort = Integer.parseInt(connectionStringSplit[0]);
-        this.departureName = connectionStringSplit[1];
-        this.departureStopName = connectionStringSplit[2];
-        this.vehicleName = connectionStringSplit[3];
-//        this.arrivalPort = Integer.parseInt(connectionStringSplit[4]);
-        this.arrivalName = connectionStringSplit[5];
-        this.departureTime = new Time(connectionStringSplit[6]);
-        this.arrivalTime = new Time(connectionStringSplit[7]);
+        //"depName,depStopName,vehicleName,arrName,depTime,arrTime
+        this.departureName = connectionStringSplit[0];
+        this.departureStopName = connectionStringSplit[1];
+        this.vehicleName = connectionStringSplit[2];
+        this.arrivalName = connectionStringSplit[3];
+        this.departureTime = new Time(connectionStringSplit[4]);
+        this.arrivalTime = new Time(connectionStringSplit[5]);
 
     }
 
     public Connection() {
-        this(-1, "", "", "", -1, "", new Time(), new Time());
+        this("", "", "", "", new Time(), new Time());
     }
 
     public String getDepartureName() {
@@ -81,11 +76,11 @@ public class Connection {
      *
      * @return a string representation of the Connection object
      */
-    //depName,depStopName,vehicleName,depTime,arrTime,arrName
+    //"depName,depStopName,vehicleName,arrName,depTime,arrTime
     public String toString() {
         String connectionString = "";
-        connectionString = connectionString + "," + departureName + "," + departureStopName + "," + vehicleName +
-                "," + departureTime + "," + arrivalTime + "," + arrivalName;
+        connectionString = connectionString + departureName + "," + departureStopName + "," + vehicleName + ","
+                + arrivalName + "," + departureTime + "," + arrivalTime;
         return connectionString;
     }
 

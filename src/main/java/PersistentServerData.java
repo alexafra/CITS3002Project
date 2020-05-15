@@ -67,9 +67,8 @@ public class PersistentServerData {
 
 
                 Connection newConnection = new Connection();
-                //,depName,depStopName,vehicleName,arrPort,arrName,depTime,arrTime
+                //,depName,depStopName,vehicleName,arrName,depTime,arrTime
                 newConnection.setDepartureName(stationName);
-                newConnection.setDeparturePort(myUdpPort);
 
                 //05:15,Line1,PlatformB,06:10,West_Station
                 newConnection.setDepartureTime(new Time(words[0]));
@@ -86,14 +85,14 @@ public class PersistentServerData {
                     if (neighbourNamePorts.get(neighbourName) != null) {
                         int neighbourUdpPort = neighbourNamePorts.get(neighbourName);
                         neighbour.setUdpPort(neighbourUdpPort);
-                        newConnection.setArrivalPort(neighbourUdpPort);
+//                        newConnection.setArrivalPort(neighbourUdpPort);
                     }
                     neighbour.addConnection(newConnection);
 
                     neighbours.put(neighbourName, neighbour);
                 } else { //Neighbour already exist
                     StationNeighbour neighbour = neighbours.get(neighbourName);
-                    newConnection.setArrivalPort(neighbour.getUdpPort());
+//                    newConnection.setArrivalPort(neighbour.getUdpPort());
                     neighbour.addConnection(newConnection);
                 }
             }
@@ -112,9 +111,9 @@ public class PersistentServerData {
         neighbourNamePorts.put(name, neighbourUdpPort);
         StationNeighbour neighbour = neighbours.get(name);
         neighbour.setUdpPort(neighbourUdpPort);
-        for (Connection connection : neighbour.getConnections()) {
-            connection.setArrivalPort(neighbourUdpPort);
-        }
+//        for (Connection connection : neighbour.getConnections()) {
+//            connection.setArrivalPort(neighbourUdpPort);
+//        }
 
     }
 

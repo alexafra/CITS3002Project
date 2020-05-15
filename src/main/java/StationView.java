@@ -31,16 +31,16 @@ public class StationView {
             } else {
                 vehicleType = "train ";
             }
-            connectionsString = "Take " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
+            connectionsString = "<p>" + connectionsString + "Take " + vehicleType + connection.getVehicleName() + " From " + connection.getDepartureStopName();
             connectionsString = connectionsString + " At " + connection.getDepartureName() + " to " + connection.getArrivalName() + " Departure Time: ";
-            connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: " + connection.getArrivalTime() + "\n";
+            connectionsString = connectionsString + connection.getDepartureTime() + " Arrival Time: " + connection.getArrivalTime() + "</p>" + "\n";
         }
 
         String body = "";
         body = body + "<html>\n";
         body = body + "<body>\n";
         body = body + "<h1>" + header + "</h1>\n";
-        body = body + "<p>" + connectionsString + "</p>\n";
+        body = body + connectionsString;
         body = body + "</body>\n";
         body = body + "</html>\n";
         return body;

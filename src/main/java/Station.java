@@ -15,7 +15,7 @@ Where the model "queries" the persistent file for information but the Persistent
 survives for the entire lifetime of the server
  */
 public class Station {
-    private static final int DATAGRAM_BYTE_SIZE = 128;
+    private static final int DATAGRAM_BYTE_SIZE = 10000;
     private static final int MAX_WORDS_PER_LINE = 5;
     private String myName;
     private int myTcpPort;
@@ -151,7 +151,7 @@ public class Station {
                             inputBuf.clear(); //Clear ByteBuffer
 
 
-                            StationModel httpModel = new StationModel(datagramChannelKey, selector, this, true);
+                            StationModel httpModel = new StationModel(datagramChannelKey, this, true);
                             StationView httpView = new StationView();
                             //Give controller ther Http Key
                             StationController httpController = new StationController(httpModel, httpView, key, this, true);
@@ -219,20 +219,22 @@ public class Station {
                             String[] headerWords = datagramHeader.split(" ");
                             String firstHeaderWord = headerWords[0];
 
+                            int indexOfFirstLine = datagramBody.indexOf("\n") + 1;
+                            datagramBody = datagramBody.substring(indexOfFirstLine);
+                            String[] datagramValues = datagramBody.split("\n");
+
                             if (firstHeaderWord.equals("RESPONSE")) {
-                                int packetNumber = Integer.parseInt(headerWords[3]);
+                                int packetNumber = Integer.parseInt(headerWords[4]);
                                 StationController controller = controllerAwaitingResponse.get(packetNumber);
-                                controller.receiveResponse(headerWords, datagramBody);
+                                controller.receiveResponse(headerWords, datagramValues);
                                 //Send to model based on packetNo.
                                 //Let existing model/view/controller deal with it
                             } else {
                                 //Create a new station/model/view
-                                int indexOfFirstLine = datagramBody.indexOf("\n") + 1;
-                                datagramBody = datagramBody.substring(indexOfFirstLine);
-                                String[] connectionsSoFar = datagramBody.split("\n");
-                                StationModel udpModel = new StationModel(datagramChannelKey, selector, this, false, senderAddress, connectionsSoFar);//key == datagramChannelKey
+
+                                StationModel udpModel = new StationModel(datagramChannelKey, this, false, senderAddress, datagramValues);//key == datagramChannelKey
                                 StationView udpView = new StationView();
-                                StationController controller = new StationController(udpModel, udpView, datagramChannelKey, this, false, senderAddress, connectionsSoFar); //View probs not necessary
+                                StationController controller = new StationController(udpModel, udpView, datagramChannelKey, this, false, senderAddress, datagramValues); //View probs not necessary
                                 //Route the datagram to correct response depending based on datagrams first line
                                 Router router = new Router(controller);
                                 router.route(datagramHeader, datagramBody);
