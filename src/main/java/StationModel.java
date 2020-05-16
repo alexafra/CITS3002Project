@@ -117,7 +117,8 @@ public class StationModel {
         } else { //get a response to connections request
             if (header[3].equals("FOUND")) {
                 if (connections.isEmpty()) {
-                    for (int i = 0; i < datagramData.length; i++) {
+
+                    for (int i = datagramValues.length; i < datagramData.length; i++) { //only add connections from here to destination
                         connections.add(new Connection(datagramData[i]));
                     }
                 } else {
@@ -126,7 +127,7 @@ public class StationModel {
                     Connection possibleLastConnection = new Connection(datagramData[datagramData.length - 1]);
                     if (lastConnectionSoFar.getArrivalTime().isAfterOrEqualTo(possibleLastConnection.getArrivalTime())) {
                         connections.clear();
-                        for (int i = 0; i < datagramData.length; i++) {
+                        for (int i = datagramValues.length; i < datagramData.length; i++) { //only add connections from here to destination
                             connections.add(new Connection(datagramData[i]));
                         }
                     }

@@ -63,6 +63,7 @@ public class PersistentServerData {
                     return;
             }
             while ((nextLine = reader.readLine()) != null) {
+                if (nextLine.equals("")) continue;
                 words = nextLine.split(",");
 
 

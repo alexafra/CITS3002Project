@@ -211,16 +211,15 @@ public class Station {
                             String datagramHeader = datagramSplit[0];
 
                             String datagramBody = "";
+                            String[] datagramValues = new String[0];
                             if (datagramSplit.length == 2) {
                                 datagramBody = datagramSplit[1].trim();
+                                int indexOfFirstLine = datagramBody.indexOf("\n") + 1;
+                                datagramBody = datagramBody.substring(indexOfFirstLine);
+                                datagramValues = datagramBody.split("\n");
                             }
-
                             String[] headerWords = datagramHeader.split(" ");
                             String firstHeaderWord = headerWords[0];
-
-                            int indexOfFirstLine = datagramBody.indexOf("\n") + 1;
-                            datagramBody = datagramBody.substring(indexOfFirstLine);
-                            String[] datagramValues = datagramBody.split("\n");
 
                             if (firstHeaderWord.equals("RESPONSE")) {
                                 int packetNumber = Integer.parseInt(headerWords[4]);

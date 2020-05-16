@@ -15,6 +15,7 @@ public class StationController {
     private boolean isTcpController;
     private InetSocketAddress udpSenderAddress;
     private String[] connectionsSoFar;
+    private int packetNumberResponse;
 
 
     public StationController(StationModel model, SelectionKey key, Station station, boolean isTcpController, InetSocketAddress udpSenderAddress, String[] connectionsSoFar) {
@@ -24,6 +25,7 @@ public class StationController {
         this.isTcpController = isTcpController;
         this.udpSenderAddress = udpSenderAddress;
         this.connectionsSoFar = connectionsSoFar;
+        this.packetNumberResponse = -1;
     }
 
     public StationController(StationModel model, SelectionKey key, Station station, boolean isTcpController) {
@@ -68,12 +70,13 @@ public class StationController {
     }
 
     public void getUdp(String destination, int packetNo) {
+        this.packetNumberResponse = packetNo;
         model.setConnections(destination);
         if (!model.isAwaitingResponses()) {
             ArrayList<Connection> connectionsToDestination = model.getConnections(); //earliest destination
             String response = "";
             //int packetNo, String destination, ArrayList<Connection> connectionsToDestination, String[] connectionsToHere
-            response = UdpPacketConstructor.sendConnections(packetNo, destination, connectionsToDestination, connectionsSoFar);
+            response = UdpPacketConstructor.sendConnections(packetNumberResponse, destination, connectionsToDestination, connectionsSoFar);
 
             executeWriteUdp(response, udpSenderAddress);
         } else {
@@ -112,8 +115,8 @@ public class StationController {
                 }
                 executeWriteHttp(response);
             } else {
-                //Reply to who is your initial requester
-                response = UdpPacketConstructor.sendConnections(packetNo, myDestination, connections, connectionsSoFar);
+                //Reply to who is your initial requester WRONG PACKET NUMBER
+                response = UdpPacketConstructor.sendConnections(packetNumberResponse, myDestination, connections, connectionsSoFar);
                 executeWriteUdp(response, udpSenderAddress);
             }
         }
