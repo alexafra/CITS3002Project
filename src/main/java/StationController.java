@@ -10,7 +10,6 @@ import java.util.ArrayList;
 //server received different http method requests
 public class StationController {
     private StationModel model;
-    private StationView view;
     private SelectionKey key; //could be either http or udp key
     private Station station; //Does a controller own this key?
     private boolean isTcpController;
@@ -132,11 +131,17 @@ public class StationController {
             String myName = model.getMyName();
             String myDestination = model.getDestinationName();
             if (isTcpController) {
-                response = view.displayConnections(myName, myDestination, connections);
+                if (connections.isEmpty()) {
+                    response = StationView.displayNoConnectionAvailable(myName, myDestination);
+                } else {
+                    response = StationView.displayConnections(myName, myDestination, connections);
+                }
                 executeWriteHttp(response);
             } else {
                 //Reply to who is your initial requester
                 response = UdpPacketConstructor.sendConnections(packetNo, myDestination, connections, connectionsSoFar);
+
+
                 executeWriteUdp(response, udpSenderAddress);
             }
             //Not quite right

@@ -2,18 +2,8 @@ import java.util.ArrayList;
 
 public class StationView {
 
-    private String stationView;
 
-    public StationView(String stationView) {
-        this.stationView = stationView;
-    }
-
-    public StationView() {
-        this("");
-    }
-
-
-    public String displayConnections(String myName, String destinatipn, ArrayList<Connection> connections) {
+    public static String displayConnections(String myName, String destinatipn, ArrayList<Connection> connections) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayConnections(myName, destinatipn, connections);
@@ -22,7 +12,7 @@ public class StationView {
         return response;
     }
 
-    public String bodyDisplayConnections(String myName, String destination, ArrayList<Connection> connections) {
+    private static String bodyDisplayConnections(String myName, String destination, ArrayList<Connection> connections) {
         String header = "The suggested route from your location: " + myName + " to your destination: " + destination + " is:";
         String connectionsString = "";
         for (int i = 0; i < connections.size(); i++) {
@@ -49,7 +39,7 @@ public class StationView {
     }
 
 
-    public String displayArrivalIsDeparture(String myName) {
+    public static String displayArrivalIsDeparture(String myName) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayArrivalIsDeparture(myName);
@@ -58,7 +48,7 @@ public class StationView {
         return response;
     }
 
-    public String bodyDisplayArrivalIsDeparture(String myName) {
+    private static String bodyDisplayArrivalIsDeparture(String myName) {
         String body = "";
         body = body + "<html>\n";
         body = body + "<body>\n";
@@ -69,7 +59,7 @@ public class StationView {
     }
 
 
-    public String displayNoConnectionAvailable(String myName, String neighbour) {
+    public static String displayNoConnectionAvailable(String myName, String neighbour) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayNoConnectionAvailable(myName, neighbour);
@@ -78,7 +68,7 @@ public class StationView {
         return response;
     }
 
-    public String bodyDisplayNoConnectionAvailable(String myName, String neighbour) {
+    private static String bodyDisplayNoConnectionAvailable(String myName, String neighbour) {
         String body = "";
         body = body + "<html>\n";
         body = body + "<body>\n";
@@ -88,7 +78,7 @@ public class StationView {
         return body;
     }
 
-    public String goodHeader() {
+    private static String goodHeader() {
         String header = "";
         header = header + "HTTP/1.1 200 OK\n";
         header = header + "Content-Type: text/html\n";

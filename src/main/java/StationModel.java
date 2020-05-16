@@ -112,7 +112,6 @@ public class StationModel {
                 if (datagramValues.length > 0 && datagramValues[0].split(",").length == 6) { //checks if this datagram is to build on another
                     earliestDepartureTime = new Time(datagramValues[datagramValues.length - 1].split(",")[5]);
                 }
-
                 sendConnectionsUdpRequests(this.destinationName, new ArrayList<>(neighboursToRequestConnection.values()), earliestDepartureTime);
             }
         } else { //get a response to connections request
@@ -171,20 +170,29 @@ public class StationModel {
     private void sendConnectionsUdpRequests(String destinationName, ArrayList<StationNeighbour> neighbours, Time earliestDepartureTime) {
         try {
             for (StationNeighbour neighbour : neighbours) {
-                int packetNo = station.getPacketCount();
-                awaitingPacketNumbers.add(packetNo);
-                station.incrementPacketCount();
-
-                int neighbourPort = neighbour.getUdpPort();
                 Connection soonestConnectionToNeighbour = neighbour.getSoonestConnection(earliestDepartureTime);
-                String requestString = UdpPacketConstructor.getConnections(packetNo, destinationName, soonestConnectionToNeighbour, datagramValues);
-                ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
-                InetSocketAddress destination = new InetSocketAddress("127.0.0.1", neighbourPort);
-                DatagramChannel channel = (DatagramChannel) datagramChannelKey.channel();
-                channel.send(requestBytes, destination); //Not asking the Selector key
+                if (soonestConnectionToNeighbour != null) {
+                    int packetNo = station.getPacketCount();
+                    awaitingPacketNumbers.add(packetNo);
+                    station.incrementPacketCount();
 
-                this.awaitingResponses = true;
+                    int neighbourPort = neighbour.getUdpPort();
 
+                    String requestString = UdpPacketConstructor.getConnections(packetNo, destinationName, soonestConnectionToNeighbour, datagramValues);
+
+
+                    ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
+                    InetSocketAddress destination = new InetSocketAddress("127.0.0.1", neighbourPort);
+                    DatagramChannel channel = (DatagramChannel) datagramChannelKey.channel();
+
+                    System.out.println("Sending Datagram Packet to: " + destination + " from " + getMyUdpPort() + " contains: ");
+                    System.out.println(requestString);
+                    System.out.println("\n");
+
+                    channel.send(requestBytes, destination); //Not asking the Selector key
+
+                    this.awaitingResponses = true;
+                }
             }
         } catch (Exception e) {
             System.out.println("Err: " + e);
@@ -202,7 +210,13 @@ public class StationModel {
                 ByteBuffer requestBytes = ByteBuffer.wrap(requestString.getBytes(StandardCharsets.UTF_8));
                 InetSocketAddress destination = new InetSocketAddress("127.0.0.1", portWithoutName);
                 DatagramChannel channel = (DatagramChannel) datagramChannelKey.channel();
+
+                System.out.println("Sending Datagram Packet to: " + destination + " from " + getMyUdpPort() + " contains: ");
+                System.out.println(requestString);
+                System.out.println("\n");
+
                 channel.send(requestBytes, destination); //Not asking the Selector key
+
 
                 this.awaitingResponses = true;
             } catch (Exception e) {
