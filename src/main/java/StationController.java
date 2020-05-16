@@ -17,9 +17,8 @@ public class StationController {
     private String[] connectionsSoFar;
 
 
-    public StationController(StationModel model, StationView view, SelectionKey key, Station station, boolean isTcpController, InetSocketAddress udpSenderAddress, String[] connectionsSoFar) {
+    public StationController(StationModel model, SelectionKey key, Station station, boolean isTcpController, InetSocketAddress udpSenderAddress, String[] connectionsSoFar) {
         this.model = model;
-        this.view = view;
         this.key = key;
         this.station = station;
         this.isTcpController = isTcpController;
@@ -27,8 +26,8 @@ public class StationController {
         this.connectionsSoFar = connectionsSoFar;
     }
 
-    public StationController(StationModel model, StationView view, SelectionKey key, Station station, boolean isTcpController) {
-        this(model, view, key, station, isTcpController, null, new String[0]);
+    public StationController(StationModel model, SelectionKey key, Station station, boolean isTcpController) {
+        this(model, key, station, isTcpController, null, new String[0]);
     }
 
     private void executeWriteHttp(String httpResponse) {
@@ -47,7 +46,7 @@ public class StationController {
     public void getHttp(String destination) {
         String myName = model.getMyName();
         if (destination.equals(myName)) {
-            String response = view.displayArrivalIsDeparture(myName);
+            String response = StationView.displayArrivalIsDeparture(myName);
             executeWriteHttp(response);
         }
         model.setConnections(destination);
@@ -55,9 +54,9 @@ public class StationController {
             ArrayList<Connection> connections = model.getConnections(); //earliest destination
             String response;
             if (connections.size() == 0) { //no connections after your time
-                response = view.displayNoConnectionAvailable(myName, destination);
+                response = StationView.displayNoConnectionAvailable(myName, destination);
             } else {
-                response = view.displayConnections(myName, destination, connections);
+                response = StationView.displayConnections(myName, destination, connections);
             }
             executeWriteHttp(response);
         } else {

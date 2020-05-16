@@ -127,29 +127,10 @@ public class PersistentServerData {
         return portsWithoutNames;
     }
 
-
-
-
-
-    public int getMyTcpPort() {
-        return myTcpPort;
-    }
-
-    public void setMyTcpPort(int myTcpPort) {
-        myTcpPort = myTcpPort;
-    }
-
     public int getMyUdpPort() {
         return myUdpPort;
     }
 
-    public File getMyFile() {
-        return myFile;
-    }
-
-    public void setMyFile(String myFile) {
-        myFile = myFile;
-    }
 
     public String getMyFileName() {
         return myFileName;
@@ -159,33 +140,29 @@ public class PersistentServerData {
         return stationName;
     }
 
-    public void setMyName(String myName) {
-        myName = myName;
-    }
 
     public HashMap<String, StationNeighbour> getNeighbours() {
         return neighbours;
     }
 
-    //    public List<String> getNamesWithoutPorts2() {
-//        List<String> neighboursWithoutPorts = new ArrayList<>();
-//        for (String neighbour : neighbours.keySet()) {
-//            if (neighbourNamePorts.get(neighbour) == null) {
-//                neighboursWithoutPorts.add(neighbour);
-//            }
-//        }
-//        return neighboursWithoutPorts;
+//    public int getMyTcpPort() {
+//        return myTcpPort;
+//    }
+//
+//    public void setMyTcpPort(int myTcpPort) {
+//        myTcpPort = myTcpPort;
 //    }
 
-    //    public void addNeighbourNamePort(String name, int port) {
-//        neighbourNamePorts.put(name, port);
-//        neighbours.get(name).setUdpPort(port);
+    //    public File getMyFile() {
+//        return myFile;
+//    }
+//
+//    public void setMyFile(String myFile) {
+//        myFile = myFile;
 //    }
 
-    //
-
-
-    //////////////////////////////////DEAD METHODs
-
+    //    public void setMyName(String myName) {
+//        myName = myName;
+//    }
 
 }

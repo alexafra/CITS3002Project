@@ -152,9 +152,8 @@ public class Station {
 
 
                             StationModel httpModel = new StationModel(datagramChannelKey, this, true);
-                            StationView httpView = new StationView();
                             //Give controller ther Http Key
-                            StationController httpController = new StationController(httpModel, httpView, key, this, true);
+                            StationController httpController = new StationController(httpModel, key, this, true);
                             // controllerWaitingForResponse.
 
 
@@ -233,8 +232,7 @@ public class Station {
                                 //Create a new station/model/view
 
                                 StationModel udpModel = new StationModel(datagramChannelKey, this, false, senderAddress, datagramValues);//key == datagramChannelKey
-                                StationView udpView = new StationView();
-                                StationController controller = new StationController(udpModel, udpView, datagramChannelKey, this, false, senderAddress, datagramValues); //View probs not necessary
+                                StationController controller = new StationController(udpModel, datagramChannelKey, this, false, senderAddress, datagramValues); //View probs not necessary
                                 //Route the datagram to correct response depending based on datagrams first line
                                 Router router = new Router(controller);
                                 router.route(datagramHeader, datagramBody);
