@@ -8,7 +8,6 @@ public class StationView {
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayConnections(myName, destinatipn, connections);
         response = response + responseHeader + "\n" + responseBody;
-//        stationView = response;
         return response;
     }
 
@@ -44,7 +43,6 @@ public class StationView {
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayArrivalIsDeparture(myName);
         response = response + responseHeader + "\n" + responseBody;
-//        stationView = response;
         return response;
     }
 
@@ -58,13 +56,11 @@ public class StationView {
         return body;
     }
 
-
     public static String displayNoConnectionAvailable(String myName, String neighbour) {
         String response = "";
         String responseHeader = goodHeader();
         String responseBody = bodyDisplayNoConnectionAvailable(myName, neighbour);
         response = response + responseHeader + "\n" + responseBody;
-//        stationView = response;
         return response;
     }
 

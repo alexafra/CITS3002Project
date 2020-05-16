@@ -111,10 +111,6 @@ public class PersistentServerData {
         neighbourNamePorts.put(name, neighbourUdpPort);
         StationNeighbour neighbour = neighbours.get(name);
         neighbour.setUdpPort(neighbourUdpPort);
-//        for (Connection connection : neighbour.getConnections()) {
-//            connection.setArrivalPort(neighbourUdpPort);
-//        }
-
     }
 
     public List<Integer> getPortsWithoutNames() {
@@ -144,25 +140,4 @@ public class PersistentServerData {
     public HashMap<String, StationNeighbour> getNeighbours() {
         return neighbours;
     }
-
-//    public int getMyTcpPort() {
-//        return myTcpPort;
-//    }
-//
-//    public void setMyTcpPort(int myTcpPort) {
-//        myTcpPort = myTcpPort;
-//    }
-
-    //    public File getMyFile() {
-//        return myFile;
-//    }
-//
-//    public void setMyFile(String myFile) {
-//        myFile = myFile;
-//    }
-
-    //    public void setMyName(String myName) {
-//        myName = myName;
-//    }
-
 }

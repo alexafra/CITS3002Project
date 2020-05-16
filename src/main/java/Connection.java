@@ -46,9 +46,19 @@ public class Connection {
 //    public int getDeparturePort() { return departurePort; }
 //    public int getArrivalPort() { return arrivalPort; }
 
-    public Time getDepartureTime() { return departureTime; }
-    public Time getArrivalTime() { return arrivalTime; }
-    public String getVehicleName() { return vehicleName; }
+    public Time getDepartureTime() {
+        return departureTime;
+    }
+
+    //    public void setDeparturePort(int departurePort) { this.departurePort = departurePort; }
+//    public void setArrivalPort(int arrivalPort) { this.arrivalPort = arrivalPort; }
+    public void setDepartureTime(Time departureTime) {
+        this.departureTime = departureTime;
+    }
+
+    public Time getArrivalTime() {
+        return arrivalTime;
+    }
 
     public String getArrivalName() {
         return arrivalName;
@@ -62,18 +72,23 @@ public class Connection {
         return departureStopName;
     }
 
-    //    public void setDeparturePort(int departurePort) { this.departurePort = departurePort; }
-//    public void setArrivalPort(int arrivalPort) { this.arrivalPort = arrivalPort; }
-    public void setDepartureTime(Time departureTime) { this.departureTime = departureTime; }
-    public void setArrivalTime(Time arrivalTime) { this.arrivalTime = arrivalTime; }
-    public void setVehicleName(String vehicleName) { this.vehicleName = vehicleName; }
+    public void setArrivalTime(Time arrivalTime) {
+        this.arrivalTime = arrivalTime;
+    }
+
+    public String getVehicleName() {
+        return vehicleName;
+    }
+
+    public void setVehicleName(String vehicleName) {
+        this.vehicleName = vehicleName;
+    }
 
     public void setDepartureStopName(String departureStopName) {
         this.departureStopName = departureStopName;
     }
 
     /**
-     *
      * @return a string representation of the Connection object
      */
     //"depName,depStopName,vehicleName,arrName,depTime,arrTime
@@ -83,52 +98,5 @@ public class Connection {
                 + arrivalName + "," + departureTime + "," + arrivalTime;
         return connectionString;
     }
-
-
-
-
-
-    /**
-     * Tests if two route objects are equal
-     * @param connectionOther the other route object
-     * @return true if two objects are equal, false otherwise
-     */
-    public boolean equals(Connection connectionOther) {
-        if (connectionOther == null || connectionOther.getClass() != getClass())
-            return false;
-
-        boolean sameDepartureLocation = this.getDepartureName() == connectionOther.getDepartureName();
-        boolean sameArrivalLocation = this.getArrivalName() == connectionOther.getArrivalName();
-//        boolean sameDeparturePort = this.getDeparturePort() == connectionOther.getDeparturePort();
-//        boolean sameArrivalPort = this.getArrivalPort() == connectionOther.getArrivalPort();
-
-        boolean sameDepartureTime = this.getDepartureTime() == connectionOther.getDepartureTime();
-        boolean sameVehicleName = this.getVehicleName() == connectionOther.getVehicleName();
-        boolean sameStopName = this.getDepartureStopName() == connectionOther.getDepartureStopName();
-        boolean sameArrivalTime = this.getArrivalTime() == connectionOther.getArrivalTime();
-
-        return sameDepartureLocation && sameArrivalLocation && sameDepartureTime
-                && sameVehicleName && sameStopName && sameArrivalTime; //sameDeparturePort && sameArrivalPort &&
-    }
-
-
-    /////////////DEAD METHODS
-    //    /**
-
-//
-//
-//    //05:15,Line1,PlatformB,06:10,West_Station05:15,Line1,PlatformB,06:10,West_Station
-//    public void populateFromFileString(String fileLine) {
-//        String[] connectionStringSplit = connectionString.split(",");
-//
-//        this.departurePort = Integer.parseInt(connectionStringSplit[0]);
-//        this.departureName = connectionStringSplit[1];
-//        this.departureStopName = connectionStringSplit[2];
-//        this.vehicleName = connectionStringSplit[3];
-//        this.arrivalPort = Integer.parseInt(connectionStringSplit[4]);
-//        this.arrivalName = connectionStringSplit[5];
-//        this.departureTime.populateFromString(connectionStringSplit[6]);
-//        this.arrivalTime.populateFromString(connectionStringSplit[7]);
-//
-//    }
 }
+

@@ -67,14 +67,6 @@ public class StationController {
         }
     }
 
-    /**
-     * get method is called on base with no key-value pairs
-     * should return all timetable information associated with station
-     * If you get UDP, parse existing info
-     * Send packets along
-     * <p>
-     * GET /?to=dest ALEX/1.0 packetNo - 2^12 = 4096
-     */
     public void getUdp(String destination, int packetNo) {
         model.setConnections(destination);
         if (!model.isAwaitingResponses()) {
@@ -92,23 +84,6 @@ public class StationController {
         }
     }
 
-
-    /**
-     * Always receiving a udp response
-     * If its a name udp, update models name - same for udp and http controller
-     * You know its a name by is
-     * You will always update model to quickest connections to destination
-     * If you have more incoming
-     * <p>
-     * <p>
-     * If you receive a response  send it to model.
-     * If your model isnt waiting on any further responses then
-     * If you are a tcp controller, send http response to whoever sent initial request to you
-     * If you are a udp controller, send ud[ response to whoever sent initial request to you
-     *
-     * @param header
-     * @param datagramData
-     */
     public void receiveResponse(String[] header, String[] datagramData) {
         int packetNo = Integer.parseInt(header[4]);
         station.removeControllerAwaitingResponse(packetNo);
@@ -139,14 +114,9 @@ public class StationController {
             } else {
                 //Reply to who is your initial requester
                 response = UdpPacketConstructor.sendConnections(packetNo, myDestination, connections, connectionsSoFar);
-
-
                 executeWriteUdp(response, udpSenderAddress);
             }
-            //Not quite right
-            //Do something
-        } // else Do nothing
-        //}
+        }
     }
 
     private void executeWriteUdp(String udpResponse, InetSocketAddress address) {
@@ -160,7 +130,6 @@ public class StationController {
         key.interestOps(SelectionKey.OP_WRITE);
 
     }
-
     //    /**
 //     * getName method is called on base for the UDP protocol
 //     * should return the Station name, model should never not be ready because its in PersistentServerData from start
